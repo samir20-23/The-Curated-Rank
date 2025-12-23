@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { auth, db, storage, analytics } from "../lib/firebase";
 
 export default function Home() {
   return (
