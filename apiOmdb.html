@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Movie Info Finder</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+    img { max-width: 300px; display: block; margin-bottom: 10px; }
+    input, button { padding: 8px; margin: 5px 0; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<h1>Movie Info Finder</h1>
+
+<input type="text" id="movieName" placeholder="Type movie name..." />
+<button onclick="fetchMovie()">Search</button>
+
+<div id="movie" style="margin-top: 20px;">
+  <h2 id="title"></h2>
+  <img id="poster" />
+  <p id="plot"></p>
+  <p><strong>Director:</strong> <span id="director"></span></p>
+  <p><strong>Actors:</strong> <span id="actors"></span></p>
+  <p><strong>Genre:</strong> <span id="genre"></span></p>
+  <p><strong>IMDB Rating:</strong> <span id="rating"></span></p>
+  <p><strong>Year:</strong> <span id="year"></span></p>
+</div>
+
+<script>
+  async function fetchMovie() {
+    const movie = document.getElementById('movieName').value;
+    if(!movie) return alert("Please type a movie name!");
+    
+    const apiKey = "abe70c9a"; // your OMDb API key
+    const url = `https://www.omdbapi.com/?apikey=${apiKey}&t=${encodeURIComponent(movie)}&type=movie`;
+    
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if(data.Response === "False") {
+        alert("Movie not found!");
+        return;
+      }
+      
+      document.getElementById("title").innerText = data.Title;
+      document.getElementById("poster").src = data.Poster !== "N/A" ? data.Poster : "";
+      document.getElementById("plot").innerText = data.Plot;
+      document.getElementById("director").innerText = data.Director;
+      document.getElementById("actors").innerText = data.Actors;
+      document.getElementById("genre").innerText = data.Genre;
+      document.getElementById("rating").innerText = data.imdbRating;
+      document.getElementById("year").innerText = data.Year;
+
+    } catch(err) {
+      console.error(err);
+      alert("Error fetching movie data!");
+    }
+  }
+</script>
+
+</body>
+</html>

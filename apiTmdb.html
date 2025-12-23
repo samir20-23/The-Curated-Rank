@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>TMDb Movie Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+        }
+
+        img {
+            max-width: 300px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input,
+        button {
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        iframe {
+            width: 560px;
+            height: 315px;
+            margin-top: 10px;
+        }
+
+        .backdrops img {
+            width: 200px;
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>TMDb Movie Finder</h1>
+
+    <input type="text" id="movieName" placeholder="Type movie name..." />
+    <button onclick="fetchMovie()">Search</button>
+
+    <div id="movie" style="margin-top: 20px;">
+        <h2 id="title"></h2>
+        <img id="poster" />
+        <p id="overview"></p>
+        <p><strong>Release Date:</strong> <span id="release"></span></p>
+        <p><strong>Genres:</strong> <span id="genres"></span></p>
+        <p><strong>Rating:</strong> <span id="rating"></span></p>
+        <div id="tmdb-trailer"></div>
+        <h3>Backdrops:</h3>
+        <div class="backdrops" id="backdrops"></div>
+    </div>
+
+    <script>
+        const tmdbKey = "396b645cee00ee57c862ac3ec40a58f2";
+
+        async function fetchMovie() {
+            const movie = document.getElementById('movieName').value;
+            if (!movie) return alert("Please type a movie name!");
+
+            // Search movie by name
+            const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&query=${encodeURIComponent(movie)}&language=en-US`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
+
+            if (searchData.results.length === 0) {
+                alert("Movie not found!");
+                return;
+            }
+
+            const movieId = searchData.results[0].id;
+
+            // Get movie details + videos + images in single request
+            const detailsUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${tmdbKey}&append_to_response=videos,images&language=en-US&include_image_language=en,null`;
+            const detailsRes = await fetch(detailsUrl);
+            const detailsData = await detailsRes.json();
+
+            // Movie info
+            document.getElementById("title").innerText = detailsData.title;
+            document.getElementById("poster").src = detailsData.poster_path ? `https://image.tmdb.org/t/p/w500${detailsData.poster_path}` : "";
+            document.getElementById("overview").innerText = detailsData.overview;
+            document.getElementById("release").innerText = detailsData.release_date;
+            document.getElementById("genres").innerText = detailsData.genres.map(g => g.name).join(", ");
+            document.getElementById("rating").innerText = detailsData.vote_average;
+
+            // Trailer (YouTube)
+            const trailer = detailsData.videos.results.find(v => v.type === "Trailer" && v.site === "YouTube");
+            if (trailer) {
+                document.getElementById("tmdb-trailer").innerHTML = `<iframe src="https://www.youtube.com/embed/${trailer.key}" frameborder="0" allowfullscreen></iframe>`;
+            } else {
+                document.getElementById("tmdb-trailer").innerHTML = "No trailer available.";
+            }
+
+            // Backdrops
+            const backdropsDiv = document.getElementById("backdrops");
+            backdropsDiv.innerHTML = "";
+            detailsData.images.backdrops.slice(0, 10).forEach(img => {
+                const imgEl = document.createElement("img");
+                imgEl.src = `https://image.tmdb.org/t/p/w500${img.file_path}`;
+                backdropsDiv.appendChild(imgEl);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
