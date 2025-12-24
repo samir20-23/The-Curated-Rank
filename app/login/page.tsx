@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import Link from "next/link"
 
@@ -21,6 +21,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      // Set persistence to LOCAL so login persists for many days
+      await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email, password)
       router.push("/admin")
     } catch (err) {

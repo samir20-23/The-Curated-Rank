@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { uploadImage } from "@/lib/supabase"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
+import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import type { Item } from "@/lib/types"
 
 interface CreateItemDialogProps {
@@ -25,25 +26,34 @@ export default function CreateItemDialog({
 }: CreateItemDialogProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [type, setType] = useState("")
+  const [newType, setNewType] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const { addItem, updateItem, items } = useFirebaseItems(categoryId)
+  const { categories, updateCategory } = useFirebaseCategories()
+  
+  const category = categories.find(c => c.id === categoryId)
+  const availableTags = category?.tags || (category?.type ? category.type.split(", ").map(t => t.trim()) : [])
 
   useEffect(() => {
     if (editingItem) {
       setTitle(editingItem.title)
       setDescription(editingItem.description)
+      setType(editingItem.type || "")
       setImageUrl(editingItem.imageUrl || "")
       setImageFile(null)
     } else {
       setTitle("")
       setDescription("")
+      setType("")
+      setNewType("")
       setImageUrl("")
       setImageFile(null)
     }
-  }, [editingItem])
+  }, [editingItem, categoryId])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -75,10 +85,24 @@ export default function CreateItemDialog({
 
       }
 
+      // Determine final type: prioritize newType if provided, otherwise use selected type
+      const finalType = newType.trim() || type
+      
+      // If new type is provided and not in available tags, add it to category tags
+      if (newType.trim() && category && !availableTags.includes(newType.trim())) {
+        const updatedTags = [...availableTags, newType.trim()]
+        await updateCategory(categoryId, {
+          tags: updatedTags,
+          type: category.type || updatedTags.join(", "), // Update type for backward compatibility
+        })
+      }
+      
+      // Save item with final type
       if (editingItem) {
         await updateItem(editingItem.id, {
           title,
           description,
+          type: finalType || undefined,
           imageUrl: finalImageUrl || undefined,
         })
       } else {
@@ -87,6 +111,7 @@ export default function CreateItemDialog({
           categoryId,
           title,
           description,
+          type: finalType || undefined,
           image: "📌",
           imageUrl: finalImageUrl || undefined,
           rank: maxRank,
@@ -96,6 +121,8 @@ export default function CreateItemDialog({
 
       setTitle("")
       setDescription("")
+      setType("")
+      setNewType("")
       setImageUrl("")
       setImageFile(null)
       if (editingItem) {
@@ -148,6 +175,49 @@ export default function CreateItemDialog({
               className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               disabled={loading}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">Type</label>
+            {availableTags.length > 0 ? (
+              <select
+                value={type}
+                onChange={(e) => {
+                  setType(e.target.value)
+                  if (e.target.value) {
+                    setNewType("") // Clear new type when selecting from dropdown
+                  }
+                }}
+                className="w-full px-4 py-2 glass rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={loading}
+              >
+                <option value="">Select a type</option>
+                {availableTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-foreground/60 text-sm mb-2">No types available in this category. Add types to the category first.</p>
+            )}
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-foreground/60 mb-2">Or create new type</label>
+              <input
+                type="text"
+                value={newType}
+                onChange={(e) => {
+                  setNewType(e.target.value)
+                  if (e.target.value.trim()) {
+                    setType("") // Clear selected type when typing new type
+                  }
+                }}
+                placeholder="Enter new type name"
+                className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={loading}
+              />
+              <p className="text-xs text-foreground/60 mt-1">This will be added to the category tags</p>
+            </div>
           </div>
 
           <div>

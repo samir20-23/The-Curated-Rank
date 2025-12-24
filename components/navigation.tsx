@@ -10,18 +10,32 @@ export default function Navigation() {
   const { user, logout, isAdmin } = useAuth()
 
   useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains("dark")
-    setIsDark(isDarkMode)
+    // Load theme preference from localStorage, default to dark
+    const savedTheme = localStorage.getItem("theme")
+    const prefersDark = savedTheme === null || savedTheme === "dark"
+    const html = document.documentElement
+    
+    if (prefersDark) {
+      html.classList.add("dark")
+      setIsDark(true)
+    } else {
+      html.classList.remove("dark")
+      setIsDark(false)
+    }
   }, [])
 
   const toggleDarkMode = () => {
     const html = document.documentElement
-    if (isDark) {
-      html.classList.remove("dark")
-    } else {
+    const newIsDark = !isDark
+    
+    if (newIsDark) {
       html.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+    } else {
+      html.classList.remove("dark")
+      localStorage.setItem("theme", "light")
     }
-    setIsDark(!isDark)
+    setIsDark(newIsDark)
   }
 
   const handleLogout = async () => {

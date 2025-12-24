@@ -12,12 +12,25 @@ interface CreateCategoryDialogProps {
 
 export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategoryDialogProps) {
   const [name, setName] = useState("")
-  const [type, setType] = useState("")
+  const [type, setType] = useState("") // Keep for backward compatibility
+  const [tags, setTags] = useState<string[]>([])
+  const [currentTag, setCurrentTag] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const { addCategory } = useFirebaseCategories()
+
+  const handleAddTag = () => {
+    if (currentTag.trim() && !tags.includes(currentTag.trim())) {
+      setTags([...tags, currentTag.trim()])
+      setCurrentTag("")
+    }
+  }
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove))
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -29,8 +42,8 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !type) {
-      setError("Name and type are required")
+    if (!name || (tags.length === 0 && !type)) {
+      setError("Name and at least one tag are required")
       return
     }
 
@@ -42,16 +55,13 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
 
       // Upload image if file provided
       if (imageFile) {
-        // finalImageUrl = await uploadImage(imageFile)
-        // finalImageUrl = await uploadImage(imageFile, "category")
         finalImageUrl = await uploadImage(imageFile, "category", name)
-
-
       }
 
       await addCategory({
         name,
-        type,
+        type: type || tags.join(", "), // Keep type for backward compatibility
+        tags: tags.length > 0 ? tags : undefined,
         image: "📌",
         imageUrl: finalImageUrl || undefined,
         createdAt: new Date(),
@@ -59,6 +69,8 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
 
       setName("")
       setType("")
+      setTags([])
+      setCurrentTag("")
       setImageUrl("")
       setImageFile(null)
       onClose()
@@ -96,15 +108,51 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Type</label>
-            <input
-              type="text"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              placeholder="e.g., Action, Romance, Drama"
-              className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={loading}
-            />
+            <label className="block text-sm font-medium text-slate-200 mb-2">Tags (press Enter to add)</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={currentTag}
+                onChange={(e) => setCurrentTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    handleAddTag()
+                  }
+                }}
+                className="flex-1 rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                placeholder="Add a tag"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                disabled={loading}
+                className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm flex items-center gap-2"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      disabled={loading}
+                      className="hover:text-destructive transition-colors"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

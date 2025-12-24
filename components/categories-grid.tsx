@@ -1,21 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import CategoryCard from "./category-card"
-import CategoryListView from "./category-list-view"
 
 interface CategoriesGridProps {
-  selectedCategory: string | null
-  onCategorySelect: (category: string | null) => void
+  selectedCategory?: string | null
+  onCategorySelect?: (category: string | null) => void
 }
 
 export default function CategoriesGrid({ selectedCategory, onCategorySelect }: CategoriesGridProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const router = useRouter()
   const { categories, loading } = useFirebaseCategories()
 
-  if (selectedCategory) {
-    return <CategoryListView categoryId={selectedCategory} onBack={() => onCategorySelect(null)} />
+  const handleCategoryClick = (categoryId: string) => {
+    router.push(`/category/${categoryId}`)
   }
 
   return (
@@ -62,7 +63,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
               title={category.name}
               type={category.type}
               imageUrl={category.imageUrl}
-              onClick={() => onCategorySelect(category.id)}
+              onClick={() => handleCategoryClick(category.id)}
             />
           ))}
         </div>

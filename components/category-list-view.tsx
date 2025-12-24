@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import './list.css'
@@ -11,6 +12,7 @@ interface CategoryListViewProps {
 
 export default function CategoryListView({ categoryId, onBack }: CategoryListViewProps) {
   const [filterText, setFilterText] = useState("")
+  const router = useRouter()
   const { items, loading: itemsLoading } = useFirebaseItems(categoryId)
   const { categories } = useFirebaseCategories()
 
@@ -20,14 +22,20 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
+        <button onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div>
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">{category?.name}</h2>
-          <p className="text-foreground/60 mt-2">Type: {category?.type}</p>
+          <p className="text-foreground/60 mt-2">
+            {category?.tags && category.tags.length > 0 ? (
+              <span>Types: {category.tags.join(", ")}</span>
+            ) : (
+              <span>Type: {category?.type}</span>
+            )}
+          </p>
         </div>
       </div>
 
@@ -56,12 +64,13 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           {filteredItems.map((item) => (
             <div
               key={item.id}
+              onClick={() => router.push(`/item/${item.id}`)}
               className="group glass-strong rounded-xl overflow-hidden hover-lift flex items-center gap-6"
 
               style={{
                 position: "relative",
                 maxWidth: "90%",
-                width: "100%",
+                width: "30%",
                 cursor: "pointer"
               }}>
               {/* Item image */}
@@ -96,7 +105,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
 
                       {item.title}
                     </h3>
-                    <p className="text-foreground/60 text-sm line-clamp-1 md:text-foreground/60 md:text-sm md:line-clamp-100">{item.description}</p>
+                    <p className="text-foreground/60 text-sm line-clamp-1 ">{item.description}</p>
                   </div>
                 </div>
               </div>
