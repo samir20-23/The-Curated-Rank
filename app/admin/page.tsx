@@ -29,7 +29,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[rgba(0,0,0,0.5)]">
       <AdminNavigation />
       <main className="container mx-auto px-4 py-8">
         <AdminDashboardView />

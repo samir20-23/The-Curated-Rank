@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
-
+import './list.css'
 interface CategoryListViewProps {
   categoryId: string
   onBack: () => void
@@ -46,14 +46,26 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           <p className="text-foreground/60">Loading items...</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          width: "100%"
+        }}>
           {filteredItems.map((item) => (
             <div
               key={item.id}
               className="group glass-strong rounded-xl overflow-hidden hover-lift flex items-center gap-6"
-            >
+
+              style={{
+                position: "relative",
+                maxWidth: "90%",
+                width: "100%",
+                cursor: "pointer"
+              }}>
               {/* Item image */}
-              <div className="flex-shrink-0 w-24 h-24">
+              <div className="flex-shrink-0 w-28">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl || "/placeholder.svg"}
@@ -71,23 +83,36 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
               <div className="flex-grow p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      #{item.rank} {item.title}
+                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors" >
+                      <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
+                        style={{
+                          position: "absolute",
+                          left: "110px",
+                          top: "0",
+                          padding: "12px"
+                        }} >
+                        #{item.rank}
+                      </span>
+
+                      {item.title}
                     </h3>
-                    <p className="text-foreground/60 mt-1">{item.description}</p>
+                    <p className="text-foreground/60 text-sm line-clamp-1 md:text-foreground/60 md:text-sm md:line-clamp-100">{item.description}</p>
                   </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      )}
+      )
+      }
 
-      {!itemsLoading && filteredItems.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-foreground/60 text-lg">No items found matching your search.</p>
-        </div>
-      )}
-    </div>
+      {
+        !itemsLoading && filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-foreground/60 text-lg">No items found matching your search.</p>
+          </div>
+        )
+      }
+    </div >
   )
 }

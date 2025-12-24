@@ -62,7 +62,13 @@ export default function CategoryItemsManager({ category, onBack }: CategoryItems
           <p className="text-foreground/60">Loading items...</p>
         </div>
       ) : items.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-4" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          width: "100%"
+        }}>
           <p className="text-foreground/60 text-sm">Drag items up or down to reorder them</p>
           <DraggableItemList items={items} onReorder={handleReorder} onEdit={setEditItem} onDelete={setDeleteItem} />
         </div>

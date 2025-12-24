@@ -48,7 +48,12 @@ export default function DraggableItemList({ items, onReorder, onEdit, onDelete }
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+    }}>
       {currentItems.map((item) => (
         <div
           key={item.id}
@@ -56,10 +61,14 @@ export default function DraggableItemList({ items, onReorder, onEdit, onDelete }
           onDragStart={() => handleDragStart(item.id)}
           onDragOver={(e) => handleDragOver(e, item.id)}
           onDragEnd={handleDragEnd}
-          className={`group glass-strong rounded-lg overflow-hidden transition-all ${
-            draggedId === item.id ? "opacity-50 scale-95" : "hover:scale-105 hover:shadow-2xl"
-          }`}
-        >
+          className={`group glass-strong rounded-lg overflow-hidden transition-all ${draggedId === item.id ? "opacity-50 scale-95" : "hover:scale-105 hover:shadow-2xl"
+            }`}
+          style={{
+            position: "relative",
+            maxWidth: "90%",
+            width: "100%",
+            cursor: "pointer"
+          }}>
           <div className="flex items-center gap-4 p-4">
             <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-move">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

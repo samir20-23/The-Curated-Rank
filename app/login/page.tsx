@@ -31,7 +31,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md glass-strong p-8 rounded-xl">
         <h1 className="text-3xl font-bold text-foreground mb-2">Admin Login</h1>
         <p className="text-foreground/60 mb-8">Sign in to access the dashboard</p>

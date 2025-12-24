@@ -10,7 +10,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-[rgba(0,0,0,0.5)]  relative">
       <Navigation />
       <Hero />
       <main className="container mx-auto px-4 py-16 md:py-24">
