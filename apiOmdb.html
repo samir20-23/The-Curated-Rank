@@ -32,7 +32,7 @@
     const movie = document.getElementById('movieName').value;
     if(!movie) return alert("Please type a movie name!");
     
-    const apiKey = "abe70c9a"; // your OMDb API key
+    const apiKey = "abe70c9a"; // my OMDb API key
     const url = `https://www.omdbapi.com/?apikey=${apiKey}&t=${encodeURIComponent(movie)}&type=movie`;
     
     try {
