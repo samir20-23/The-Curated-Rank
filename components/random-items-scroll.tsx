@@ -52,7 +52,7 @@ export default function RandomItemsScroll() {
           className="flex gap-4 animate-scroll-right hover:z-10"
           style={{ width: "max-content" }}
         >
-          {[...randomItems, ...randomItems].map((item, index) => (
+          {[...randomItems, ...randomItems.slice(0, Math.max(0, randomItems.length - 1))].map((item, index) => (
             <div
               key={`${item.id}-${index}`}
               onClick={() => router.push(`/item/${item.id}`)}
@@ -61,7 +61,7 @@ export default function RandomItemsScroll() {
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
-                  alt={item.title || "Item"}
+                  alt={item.title ?? ""}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -79,7 +79,7 @@ export default function RandomItemsScroll() {
           className="flex gap-4 animate-scroll-left hover:z-10"
           style={{ width: "max-content" }}
         >
-          {[...randomItems, ...randomItems].map((item, index) => (
+          {[...randomItems, ...randomItems.slice(0, Math.max(0, randomItems.length - 1))].map((item, index) => (
             <div
               key={`${item.id}-${index}`}
               onClick={() => router.push(`/item/${item.id}`)}
@@ -88,7 +88,7 @@ export default function RandomItemsScroll() {
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
-                  alt={item.title || "Item"}
+                  alt={item.title ?? ""}
                   className="w-full h-full object-cover"
                 />
               ) : (

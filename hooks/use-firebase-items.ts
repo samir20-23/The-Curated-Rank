@@ -47,6 +47,16 @@ export function useFirebaseItems(categoryId?: string) {
       if (Array.isArray(payload.tags) && payload.tags.length === 0) delete payload.tags
       if (payload.type === "" || payload.type === undefined) delete payload.type
 
+      // Compute rank per-type (rows) instead of global category length
+      if (!payload.rank) {
+        const targetType = payload.type
+        const sameTypeItems = typeof targetType === "string"
+          ? items.filter(i => i.type === targetType)
+          : items.filter(i => !i.type)
+        const maxRank = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(i => i.rank)) : 0
+        payload.rank = maxRank + 1
+      }
+
       await addDoc(collection(db, "items"), payload)
     } catch (err) {
       setError((err as Error).message)
@@ -73,17 +83,21 @@ export function useFirebaseItems(categoryId?: string) {
       let id: string
       let imageUrl: string | undefined
       let deletedRank: number | undefined
+      let deletedType: string | undefined
+
 
       if (typeof itemOrId === "string") {
         id = itemOrId
-        // Find the item in state to get imageUrl and rank
+        // Find the item in state to get imageUrl, rank and type
         const item = items.find((i) => i.id === id)
         imageUrl = item?.imageUrl
         deletedRank = item?.rank
+        deletedType = item?.type
       } else {
         id = itemOrId.id
         imageUrl = itemOrId.imageUrl
         deletedRank = itemOrId.rank
+        deletedType = itemOrId.type
       }
 
       if (!id) throw new Error("Item ID is missing")
@@ -97,10 +111,10 @@ export function useFirebaseItems(categoryId?: string) {
       // Delete Firebase document
       await deleteDoc(doc(db, "items", id))
 
-      // Auto-update ranks: items after deleted item should decrease rank by 1
+      // Auto-update ranks: items after deleted item in the same type should decrease rank by 1
       if (deletedRank !== undefined && categoryId) {
         const itemsToUpdate = items
-          .filter(item => item.id !== id && item.rank > deletedRank)
+          .filter(item => item.id !== id && item.rank > deletedRank && (deletedType ? item.type === deletedType : !item.type))
           .map(item => ({ ...item, rank: item.rank - 1 }))
 
         if (itemsToUpdate.length > 0) {

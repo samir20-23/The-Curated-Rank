@@ -6,6 +6,7 @@ export interface Category {
   useTypes?: boolean // If false, show normal list without type grouping
   image: string
   imageUrl?: string
+  order?: number
   createdAt?: Date
 }
 

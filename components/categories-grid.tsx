@@ -17,7 +17,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const router = useRouter()
-  const { categories, loading } = useFirebaseCategories()
+  const { categories, loading, updateCategoriesOrder } = useFirebaseCategories()
   const { isAdmin } = useAuth()
   const { t } = useLanguage()
 
@@ -70,15 +70,43 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
         <div
           className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}
         >
-          {categories.map((category) => (
-            <CategoryCard
+          {categories.map((category, idx) => (
+            <div
               key={category.id}
-              id={category.id}
-              title={category.name}
-              type={category.type}
-              imageUrl={category.imageUrl}
-              onClick={() => handleCategoryClick(category.id)}
-            />
+              draggable={isAdmin}
+              onDragStart={(e) => {
+                if (!isAdmin) return
+                e.dataTransfer?.setData("text/plain", category.id)
+              }}
+              onDragOver={(e) => {
+                if (!isAdmin) return
+                e.preventDefault()
+              }}
+              onDrop={async (e) => {
+                if (!isAdmin) return
+                const draggedId = e.dataTransfer.getData("text/plain")
+                if (!draggedId || draggedId === category.id) return
+                const srcIndex = categories.findIndex(c => c.id === draggedId)
+                const destIndex = categories.findIndex(c => c.id === category.id)
+                if (srcIndex === -1 || destIndex === -1) return
+                const newCats = [...categories]
+                const [moved] = newCats.splice(srcIndex, 1)
+                newCats.splice(destIndex, 0, moved)
+                try {
+                  await updateCategoriesOrder(newCats)
+                } catch (err) {
+                  console.error("Error updating category order", err)
+                }
+              }}
+            >
+              <CategoryCard
+                id={category.id}
+                title={category.name}
+                type={category.type}
+                imageUrl={category.imageUrl}
+                onClick={() => handleCategoryClick(category.id)}
+              />
+            </div>
           ))}
         </div>
       )}

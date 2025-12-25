@@ -1,0 +1,24 @@
+/* Auto-scroll animations for type rows */
+@keyframes scroll-up {
+	0% { transform: translateY(0); }
+	50% { transform: translateY(-10%); }
+	100% { transform: translateY(0); }
+}
+
+@keyframes scroll-down {
+	0% { transform: translateY(0); }
+	50% { transform: translateY(10%); }
+	100% { transform: translateY(0); }
+}
+
+.auto-scroll-up {
+	animation: scroll-up 40s linear infinite;
+}
+
+.auto-scroll-down {
+	animation: scroll-down 36s linear infinite;
+}
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+

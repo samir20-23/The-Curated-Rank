@@ -30,6 +30,8 @@ export function useFirebaseCategories() {
           id: d.id,
           ...d.data(),
         })) as Category[]
+        // Sort by optional `order` field for deterministic ordering
+        data.sort((a, b) => (a.order || 0) - (b.order || 0))
         setCategories(data)
         setLoading(false)
       },
@@ -47,6 +49,19 @@ export function useFirebaseCategories() {
  
   const updateCategory = async (id: string, data: Partial<Category>) => {
     await updateDoc(doc(db, "categories", id), data)
+  }
+
+  const updateCategoriesOrder = async (ordered: Category[]) => {
+    try {
+      const batch = writeBatch(db)
+      ordered.forEach((c, idx) => {
+        batch.update(doc(db, "categories", c.id), { order: idx + 1 })
+      })
+      await batch.commit()
+    } catch (err) {
+      setError((err as Error).message)
+      throw err
+    }
   }
 
   const deleteCategory = async (categoryOrId: Category | string) => {
@@ -111,6 +126,7 @@ export function useFirebaseCategories() {
     error,
     addCategory,
     updateCategory,
+    updateCategoriesOrder,
     deleteCategory,
   }
 }

@@ -117,7 +117,9 @@ export default function CreateItemDialog({
           imageUrl: finalImageUrl || undefined,
         })
       } else {
-        const maxRank = items.length + 1
+        // Compute rank within the selected type (row)
+        const sameType = finalType ? items.filter(i => i.type === finalType) : items.filter(i => !i.type)
+        const maxRank = sameType.length > 0 ? Math.max(...sameType.map(i => i.rank)) + 1 : 1
         await addItem({
           categoryId,
           ...(itemTitle && { title: itemTitle }),
