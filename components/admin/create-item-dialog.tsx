@@ -36,7 +36,7 @@ export default function CreateItemDialog({
   const { addItem, updateItem, items } = useFirebaseItems(categoryId)
   const { categories, updateCategory } = useFirebaseCategories()
   const { t } = useLanguage()
-  
+
   const category = categories.find(c => c.id === categoryId)
   const availableTags = category?.tags || (category?.type ? category.type.split(", ").map(t => t.trim()) : [])
 
@@ -67,7 +67,7 @@ export default function CreateItemDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Image is required - either URL or upload, but not both
     if (imageUrl && imageFile) {
       setError("Please use either image URL or upload, not both")
@@ -94,7 +94,7 @@ export default function CreateItemDialog({
 
       // Determine final type: prioritize newType if provided, otherwise use selected type
       const finalType = newType.trim() || type
-      
+
       // If new type is provided and not in available tags, add it to category tags
       if (newType.trim() && category && !availableTags.includes(newType.trim())) {
         const updatedTags = [...availableTags, newType.trim()]
@@ -103,11 +103,11 @@ export default function CreateItemDialog({
           type: category.type || updatedTags.join(", "), // Update type for backward compatibility
         })
       }
-      
+
       // If name is empty, don't save name/description
       const itemTitle = title?.trim() || undefined
       const itemDescription = description?.trim() || undefined
-      
+
       // Save item with final type
       if (editingItem) {
         await updateItem(editingItem.id, {
@@ -158,11 +158,11 @@ export default function CreateItemDialog({
   if (!isOpen && !editingItem) return null
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -183,7 +183,7 @@ export default function CreateItemDialog({
             </label>
             <input
               type="text"
-              value={title}
+              value={title ?? ""}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Interstellar"
               className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -196,7 +196,7 @@ export default function CreateItemDialog({
               Description <span className="text-foreground/60 text-xs">(Optional)</span>
             </label>
             <textarea
-              value={description}
+              value={description ?? ""}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the item..."
               rows={4}
@@ -211,7 +211,7 @@ export default function CreateItemDialog({
             </label>
             {availableTags.length > 0 ? (
               <select
-                value={type}
+                value={type ?? ""}
                 onChange={(e) => {
                   setType(e.target.value)
                   if (e.target.value) {

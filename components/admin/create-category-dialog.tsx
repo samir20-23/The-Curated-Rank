@@ -279,8 +279,8 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
 
           <div className="flex gap-4 pt-4">
             <button
-              type="button"
-              onClick={onClose}
+              type="button" 
+              onClick={onClose} 
               disabled={loading}
               className="flex-1 px-4 py-2 glass text-foreground hover:bg-secondary/30 rounded-lg font-medium transition duration-300 disabled:opacity-50"
             >

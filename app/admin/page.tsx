@@ -1,39 +1,39 @@
-"use client"
+// "use client"
 
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import AdminNavigation from "@/components/admin/admin-navigation"
-import AdminDashboardView from "@/components/admin/admin-dashboard-view"
+// import { useAuth } from "@/contexts/auth-context"
+// import { useRouter } from "next/navigation"
+// import { useEffect } from "react"
+// // import AdminNavigation from "@/components/admin/admin-navigation"
+// // import AdminDashboardView from "@/components/admin/admin-dashboard-view"
 
-export default function AdminPage() {
-  const { user, loading, isAdmin } = useAuth()
-  const router = useRouter()
+// export default function AdminPage() {
+//   const { user, loading, isAdmin } = useAuth()
+//   const router = useRouter()
 
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      router.push("/login")
-    }
-  }, [user, loading, isAdmin, router])
+//   useEffect(() => {
+//     if (!loading && (!user || !isAdmin)) {
+//       router.push("/login")
+//     }
+//   }, [user, loading, isAdmin, router])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-foreground/60">Loading...</p>
-      </div>
-    )
-  }
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-background flex items-center justify-center">
+//         <p className="text-foreground/60">Loading...</p>
+//       </div>
+//     )
+//   }
 
-  if (!isAdmin) {
-    return null
-  }
+//   if (!isAdmin) {
+//     return null
+//   }
 
-  return (
-    <div className="min-h-screen bg-[rgba(0,0,0,0.5)]">
-      <AdminNavigation />
-      <main className="container mx-auto px-4 py-8">
-        <AdminDashboardView />
-      </main>
-    </div>
-  )
-}
+//   return (
+//     <div className="min-h-screen bg-[rgba(0,0,0,0.5)]">
+//       <AdminNavigation />
+//       <main className="container mx-auto px-4 py-8">
+//         <AdminDashboardView />
+//       </main>
+//     </div>
+//   )
+// }

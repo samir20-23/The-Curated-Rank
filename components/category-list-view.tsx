@@ -224,7 +224,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   }
 
   // Normal list view (when useTypes is false or no types)
-  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0) {
+  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0|| Object.keys(itemsByType || {}).length === 1) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between mb-8">
