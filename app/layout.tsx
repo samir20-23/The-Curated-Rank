@@ -9,10 +9,18 @@ import { LanguageProvider } from "@/contexts/language-context"
 
 const geist = Geist({ subsets: ["latin"] })
 
+
 export const metadata: Metadata = {
   title: "MarwanRank - Premium Content Discovery",
   description: "Discover meticulously curated lists of movies, TV shows, music, actors, and gaming content.",
-  generator: 'MarwanRank'
+  generator: "MarwanRank",
+  icons: {
+    icon: [
+      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
+    ],
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function RootLayout({
@@ -32,11 +40,16 @@ export default function RootLayout({
       }
     })();
   `
-  
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+
+        <meta property="og:image" content="/icon.svg" />
+        <meta property="og:url" content="https://the-curated-rank.vercel.app/" />
+        <meta property="og:site_name" content="MarwanRank" />
+        <link rel="icon" href="//icon-light-32x32.png" type="image/svg+xml" />
       </head>
       <body className={`${geist.className} bg-background text-foreground overflow-x-hidden`} suppressHydrationWarning>
         <LanguageProvider>

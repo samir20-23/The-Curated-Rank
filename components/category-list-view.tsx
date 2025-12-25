@@ -224,7 +224,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   }
 
   // Normal list view (when useTypes is false or no types)
-  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0|| Object.keys(itemsByType || {}).length === 1) {
+  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0 || Object.keys(itemsByType || {}).length === 1) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between mb-8">
@@ -486,8 +486,8 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           <p className="text-foreground/60">{t("common.loading")}</p>
         </div>
       ) : (
-        <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4`}>
-          <div className={`flex gap-6 ${isSingleType ? "justify-center" : ""}`} style={{ minWidth: isSingleType ? "auto" : "max-content" }}>
+        <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4 h-[1000px]`} style={{ width: "100%" }} >
+          <div className={`flex gap-6  ${isSingleType ? "justify-center" : ""}`} style={{ minWidth: isSingleType ? "auto" : "max-content" }}>
             {typeColumns
               .filter(type => !filterType || type === filterType) // Filter types if filterType is set
               .map((type) => {
@@ -526,7 +526,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
 
                     {/* Items Column - Vertical Scroll */}
                     <div
-                      className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-hide"
+                      className="space-y-3 max-h-[1000px] overflow-y-auto scrollbar-hide"
                       style={{
                         scrollbarWidth: "none",
                         msOverflowStyle: "none"
