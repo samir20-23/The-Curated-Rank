@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
+import { abort } from "process"
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,7 +17,7 @@ export default function Navigation() {
     const savedTheme = localStorage.getItem("theme")
     const prefersDark = savedTheme === null || savedTheme === "dark"
     const html = document.documentElement
-    
+
     if (prefersDark) {
       html.classList.add("dark")
       setIsDark(true)
@@ -29,7 +30,7 @@ export default function Navigation() {
   const toggleDarkMode = () => {
     const html = document.documentElement
     const newIsDark = !isDark
-    
+
     if (newIsDark) {
       html.classList.add("dark")
       localStorage.setItem("theme", "dark")
@@ -51,17 +52,26 @@ export default function Navigation() {
           href="/"
           className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity"
         >
-       <img src="/icon.svg"  className="w-10 h-10" />
+          <div style={{ display: "flex", gap: "12px", fontSize: "19px", justifyContent: "center", alignItems: "center", zIndex: 1 }} >
+            <img src="/icon.svg" className="w-10 h-10" />
+            <div className="w-31 h-5   z-0 left-32 dark:bg-[rgb(48, 41, 56)]  bg-[rgba(0, 0, 0, 0.16)]" style={{ position: 'absolute', borderRadius: "5px", filter: "blur(4px)" }}></div>
+            {/* rgb(48, 41, 56) */}
+            <p className="bg-gradient-to-r from-[#f3f4f6] to-[#1E293B] bg-clip-text text-transparent " style={{ zIndex: 2 }}>
+              MarwanRank
+            </p>
+          </div>
+
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-foreground/80 hover:text-primary transition-colors">
-            {t("nav.browse")}
-          </Link>
-        </div>
+
 
         <div className="hidden md:flex items-center gap-4">
           {/* Language Switcher */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/" className="text-foreground/80 hover:text-primary transition-colors" style={{ fontSize: "15px" }}>
+              {t("nav.home")}
+            </Link>
+          </div>
           <button
             onClick={() => setLanguage(language === "en" ? "ar" : "en")}
             className="px-3 py-1 glass text-foreground hover:bg-secondary/50 rounded-lg text-sm font-medium transition duration-300"

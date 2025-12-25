@@ -59,7 +59,7 @@ export default function ItemListManager({ categoryId, onBack }: ItemListManagerP
       </div>
     )
   }
-
+ 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">

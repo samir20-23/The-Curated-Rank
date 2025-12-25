@@ -224,12 +224,12 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   }
 
   // Normal list view (when useTypes is false or no types)
-  if (!useTypes || availableTypes.length === 0 || Object.keys(itemsByType || {}).length === 0) {
+  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-1">
-            <button onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
+            <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -239,7 +239,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
             </div>
           </div>
           {isAdmin && (
-            <button
+            <button style={{ cursor: "pointer" }}
               onClick={() => setIsCreateItemOpen(true)}
               className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
             >
@@ -286,8 +286,8 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
             <p className="text-foreground/60">{t("common.loading")}</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredItems.map((item, index) => (
+          <div className="space-y-2">
+            {filteredItems.map((item) => (
               <div
                 key={item.id}
                 draggable={isAdmin}
@@ -302,75 +302,77 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                   handleDrop(item.id)
                 }}
                 onMouseDown={(e) => {
-                  // Only allow drag if admin and clicking on card (not buttons)
-                  if (!isAdmin || (e.target as HTMLElement).closest('button')) {
+                  if (!isAdmin || (e.target as HTMLElement).closest("button")) {
                     e.preventDefault()
                   }
                 }}
                 onClick={(e) => {
-                  // Only navigate if not dragging and not clicking on buttons
-                  if (!draggedId && !(e.target as HTMLElement).closest('button')) {
+                  if (!draggedId && !(e.target as HTMLElement).closest("button")) {
                     router.push(`/item/${item.id}`)
                   }
                 }}
-                className={`group glass-strong rounded-xl overflow-hidden hover-lift flex items-center gap-6 transition-all ${draggedId === item.id ? "opacity-50 scale-95 rotate-2 cursor-grabbing" : isAdmin ? "cursor-grab" : "cursor-pointer"
-                  } ${draggedId && draggedId !== item.id ? "hover:scale-105" : ""}`}
-                style={{
-                  position: "relative",
-                  maxWidth: "90%",
-                  width: "30%",
-                }}>
-                {isAdmin && (
-                  <div className="absolute top-2 right-2 flex gap-2 z-10">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setEditingItem(item)
-                      }}
-                      className="p-2 glass text-primary hover:bg-primary/20 rounded-lg text-sm"
-                    >
-                      {t("admin.edit")}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteClick(item)
-                      }}
-                      className="p-2 glass text-red-400 hover:bg-red-500/20 rounded-lg text-sm"
-                    >
-                      {t("admin.delete")}
-                    </button>
+                className={`group rounded-lg overflow-hidden transition-all flex items-center gap-4 p-4 ${isAdmin ? "cursor-grab" : "cursor-pointer"} ${draggedId === item.id ? "opacity-50 scale-95" : ""}`}
+                style={{ background: undefined }}
+              >
+                <div className="absolute inset-0 pointer-events-none rounded-lg bg-white/50 dark:bg-black/50 opacity-60" />
+
+                <div className="relative w-full flex items-center gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-move z-10">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 3a1 1 0 100 2 1 1 0 000-2zM10 8a1 1 0 100 2 1 1 0 000-2zM10 13a1 1 0 100 2 1 1 0 000-2z" />
+                    </svg>
                   </div>
-                )}
-                <div className="flex-shrink-0 w-28">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl || "/placeholder.svg"}
-                      alt={item.title || `Item ${index + 1}`}
-                      className="w-full h-full object-cover rounded-l-xl"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center rounded-l-xl">
-                      <span className="text-2xl">📌</span>
+
+                  <div className="flex-shrink-0 w-16 h-16 z-10">
+                    {item.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.imageUrl || "/placeholder.svg"} alt={item.title || `Item ${item.rank}`} className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 rounded-lg flex items-center justify-center">
+                        <span className="text-2xl">📌</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0 z-10">
+                    <div className="bg-gradient-to-br from-primary/30 to-accent/30 rounded-lg w-12 h-12 flex items-center justify-center">
+                      <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">#{item.rank}</span>
                     </div>
-                  )}
-                </div>
-                <div className="flex-grow p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                        <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mr-2">
-                          #{item.rank}
-                        </span>
-                        {item.title || `Item ${item.rank}`}
-                      </h3>
-                      {item.description && (
-                        <p className="text-foreground/60 text-sm line-clamp-1">{item.description}</p>
-                      )}
-                    </div>
+                  </div>
+
+                  <div className="flex-grow z-10">
+                    <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{item.title || `Item ${item.rank}`}</h4>
+                    {item.description && <p className="text-foreground/60 text-sm line-clamp-1">{item.description}</p>}
+                  </div>
+
+                  <div className="flex gap-2 z-10">
+                    {isAdmin && (
+                      <>
+                        <button style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingItem(item)
+                          }}
+                          className="px-3 py-1 glass text-foreground hover:bg-secondary/30 rounded text-sm font-medium transition duration-300"
+                        >
+                          {t("admin.edit")}
+                        </button>
+
+                        <button style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(item)
+                          }}
+                          className="px-3 py-1 glass text-red-400 hover:bg-red-500/20 rounded text-sm font-medium transition duration-300"
+                        >
+                          {t("admin.delete")}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
+
             ))}
           </div>
         )}
@@ -416,6 +418,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
         )}
       </div>
     )
+
   }
 
   // Column-based type view
@@ -427,7 +430,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
     <div className="space-y-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-1">
-          <button onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
+          <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -437,7 +440,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           </div>
         </div>
         {isAdmin && (
-          <button
+          <button style={{ cursor: "pointer" }}
             onClick={() => setIsCreateItemOpen(true)}
             className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
           >
@@ -572,7 +575,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                             )}
                             {isAdmin && (
                               <div className="flex justify-end gap-2">
-                                <button
+                                <button style={{ cursor: "pointer" }}
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     setEditingItem(item)
@@ -581,7 +584,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                                 >
                                   {t("admin.edit")}
                                 </button>
-                                <button
+                                <button style={{ cursor: "pointer" }}
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleDeleteClick(item)

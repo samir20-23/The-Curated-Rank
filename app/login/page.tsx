@@ -24,7 +24,7 @@ export default function LoginPage() {
       // Set persistence to LOCAL so login persists for many days
       await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email, password)
-      router.push("/admin")
+      router.push("/")
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -51,7 +51,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@gmail.com"
+              placeholder="email@gmail.com"
               className="w-full px-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             />

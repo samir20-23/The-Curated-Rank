@@ -10,9 +10,9 @@ import { LanguageProvider } from "@/contexts/language-context"
 const geist = Geist({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Marwanscope - Premium Content Discovery",
+  title: "MarwanRank - Premium Content Discovery",
   description: "Discover meticulously curated lists of movies, TV shows, music, actors, and gaming content.",
-  generator: 'v0.app'
+  generator: 'MarwanRank'
 }
 
 export default function RootLayout({

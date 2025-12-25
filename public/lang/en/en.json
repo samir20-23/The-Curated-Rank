@@ -1,6 +1,7 @@
 {
   "nav": {
     "browse": "Browse",
+    "home": "Home",
     "dashboard": "Dashboard",
     "login": "Login",
     "logout": "Logout"
@@ -61,4 +62,3 @@
     "required": "Required"
   }
 }
-

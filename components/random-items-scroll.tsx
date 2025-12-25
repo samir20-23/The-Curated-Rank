@@ -73,7 +73,7 @@ export default function RandomItemsScroll() {
           ))}
         </div>
       </div>
-      <br />
+      <br /> 
       <div className="relative overflow-hidden z-0 hover:z-10 " style={{ top: "-52px" }}>
         <div
           className="flex gap-4 animate-scroll-left hover:z-10"
