@@ -12,7 +12,7 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative">
       <Navigation />
-      <main className="container mx-auto px-4 py-16 md:py-24">
+      <main className="container mx-auto px-4   " style={{paddingTop: "15px"}}>
         <CategoryListView categoryId={categoryId} onBack={() => window.history.back()} />
       </main>
       <Footer />

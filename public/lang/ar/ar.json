@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "browse": "تصفح",
+    "dashboard": "لوحة التحكم",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج"
+  },
+  "category": {
+    "title": "الفئات",
+    "subtitle": "استكشف مجموعاتنا المختارة",
+    "type": "النوع",
+    "types": "الأنواع",
+    "noCategories": "لا توجد فئات متاحة بعد.",
+    "viewItems": "عرض العناصر"
+  },
+  "item": {
+    "title": "العناصر",
+    "noItems": "لم يتم العثور على عناصر",
+    "search": "البحث عن العناصر...",
+    "rank": "الترتيب",
+    "uncategorized": "غير مصنف"
+  },
+  "admin": {
+    "create": "إنشاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "createCategory": "إنشاء فئة",
+    "editCategory": "تعديل فئة",
+    "createItem": "إنشاء عنصر",
+    "editItem": "تعديل عنصر",
+    "manageItems": "إدارة العناصر",
+    "deleteConfirm": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع العناصر في هذه الفئة.",
+    "areYouSure": "هل أنت متأكد أنك تريد حذف هذا",
+    "finalDelete": "هذا تأكيدك النهائي. لا يمكن التراجع عن هذا الإجراء.",
+    "categoryName": "اسم الفئة",
+    "tags": "العلامات",
+    "addTag": "إضافة",
+    "imageUrl": "رابط الصورة",
+    "uploadImage": "رفع صورة",
+    "useTypes": "استخدام الأنواع",
+    "useTypesDesc": "إذا لم يتم تحديده، يعرض قائمة عادية",
+    "creating": "جاري الإنشاء...",
+    "saving": "جاري الحفظ...",
+    "itemTitle": "العنوان",
+    "itemDescription": "الوصف",
+    "itemType": "النوع",
+    "createNewType": "أو إنشاء نوع جديد",
+    "newTypeDesc": "سيتم إضافته إلى علامات الفئة"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "back": "رجوع",
+    "name": "الاسم",
+    "description": "الوصف",
+    "image": "الصورة",
+    "type": "النوع",
+    "optional": "اختياري",
+    "required": "مطلوب"
+  }
+}
+

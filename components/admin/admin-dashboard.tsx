@@ -41,7 +41,7 @@ export default function AdminDashboard({ onCategorySelect }: AdminDashboardProps
       <div>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">Admin Dashboard</h1>
+            <h1 className="text-1xl md:text-2xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-foreground/60 mt-2">Manage categories and content</p>
           </div>
           <button

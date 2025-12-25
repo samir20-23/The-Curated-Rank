@@ -1,0 +1,62 @@
+{
+    "external": {
+        "1000_films_before_you_die": "https://docs.google.com/document/d/1GJJquVfRikPQDCz62pkxPMeLe0Bu7wXo5bRCkmaBLa4/edit",
+        "facebook": "https://www.facebook.com/marwanmovies",
+        "twitter_x": "https://x.com/marwan_elbobssi",
+        "kick": "https://kick.com/marwanmovies",
+        "imdb": "https://www.imdb.com/user/ur40191153",
+        "youtube": "https://www.youtube.com/@MarwanMovies",
+        "instagram": "https://www.instagram.com/marwanbobssi",
+        "serializd": "https://www.serializd.com/user/Marwanmovies/profile",
+        "twitch": "https://www.twitch.tv/marwanmovies",
+        "tiktok": "https://www.tiktok.com/@marwan_movies",
+        "spotify_playlist": "https://open.spotify.com/playlist/1glKsFFioxvA6Yi6d5r0cZ",
+        "ultimate_top_10_lists": "https://docs.google.com/spreadsheets/d/1UERaUSztL62WX0LpnMzx78VfG-p3FddP4p2qd89TLTc/edit"
+    },
+    "genres": {
+        "best_action_films": "https://letterboxd.com/MarwanMovies/list/best-action-films-1",
+        "best_addiction_films": "https://letterboxd.com/MarwanMovies/list/best-addiction-movies",
+        "best_anthology_films": "https://letterboxd.com/MarwanMovies/list/best-anthology-multiple-stories-films",
+        "black_white_films_for_beginners": "https://letterboxd.com/MarwanMovies/list/best-black-white-films-for-new-cinema-lovers",
+        "best_buddy_cop_films": "https://letterboxd.com/MarwanMovies/list/best-buddy-cop-films",
+        "best_con_scam_films": "https://letterboxd.com/MarwanMovies/list/best-con-scam-films",
+        "best_courtroom_films": "https://letterboxd.com/MarwanMovies/list/best-courtroom-movies",
+        "best_crime_documentaries": "https://letterboxd.com/MarwanMovies/list/crime-documentaries",
+        "best_documentary_films": "https://letterboxd.com/marwanmovies/list/best-documentary-films",
+        "best_heist_films": "https://letterboxd.com/MarwanMovies/list/best-heist-films",
+        "best_mind_blowing_films": "https://letterboxd.com/MarwanMovies/list/best-mind-blowing-films",
+        "best_revenge_films": "https://letterboxd.com/MarwanMovies/list/best-revenge-films-1",
+        "most_rewatchable_movies": "https://letterboxd.com/MarwanMovies/list/the-most-rewatchable-movies-of-all-time",
+        "best_survival_films": "https://letterboxd.com/MarwanMovies/list/best-survival-movies"
+    },
+    "world_cinema": {
+        "foreign_language_films": "https://letterboxd.com/MarwanMovies/list/best-foreign-language-films",
+        "50_countries_50_films": "https://letterboxd.com/MarwanMovies/list/50-countries-50-films",
+        "italian_films": "https://letterboxd.com/MarwanMovies/list/favorite-italian-films",
+        "french_films": "https://letterboxd.com/MarwanMovies/list/favorite-french-films",
+        "japanese_films": "https://letterboxd.com/MarwanMovies/list/favorite-japanese-films",
+        "british_films": "https://letterboxd.com/marwanmovies/list/favorite-british-films",
+        "south_korean_films": "https://letterboxd.com/MarwanMovies/list/favorite-south-korean-films",
+        "iranian_films": "https://letterboxd.com/MarwanMovies/list/favorite-iranian-films",
+        "german_films": "https://letterboxd.com/MarwanMovies/list/favorite-german-films",
+        "spanish_films": "https://letterboxd.com/MarwanMovies/list/favorite-spanish-films",
+        "latin_american_films": "https://letterboxd.com/MarwanMovies/list/favorite-latin-american-films",
+        "scandinavian_films": "https://letterboxd.com/MarwanMovies/list/favorite-scandinavian-films"
+    },
+    "by_decades": {
+        "1950s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-50s",
+        "1960s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-60s",
+        "1970s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-70s",
+        "1980s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-80s",
+        "1990s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-90s",
+        "2000s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-2000s",
+        "2010s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-2010s",
+        "2020s": "https://letterboxd.com/MarwanMovies/list/my-favorite-films-of-the-2020s"
+    },
+    "other_lists": {
+        "hidden_gems": "https://letterboxd.com/MarwanMovies/list/hidden-gems-1",
+        "top_100_films": "https://letterboxd.com/MarwanMovies/list/my-top-100-films",
+        "top_250_films": "https://letterboxd.com/MarwanMovies/list/my-personnel-top-250",
+        "films_based_on_true_events": "https://letterboxd.com/MarwanMovies/list/films-based-on-true-events"
+    }
+}

@@ -3,7 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
+import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 import CategoryCard from "./category-card"
+import CreateCategoryDialog from "@/components/admin/create-category-dialog"
 
 interface CategoriesGridProps {
   selectedCategory?: string | null
@@ -12,8 +15,11 @@ interface CategoriesGridProps {
 
 export default function CategoriesGrid({ selectedCategory, onCategorySelect }: CategoriesGridProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
   const router = useRouter()
   const { categories, loading } = useFirebaseCategories()
+  const { isAdmin } = useAuth()
+  const { t } = useLanguage()
 
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/category/${categoryId}`)
@@ -21,12 +27,20 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex items-center justify-between mb-12 flex-wrap gap-4">
         <div>
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-2">Categories</h2>
-          <p className="text-foreground/60">Explore our curated collections</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{t("category.title")}</h2>
+          <p className="text-foreground/60">{t("category.subtitle")}</p>
         </div>
         <div className="flex gap-2">
+          {isAdmin && (
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
+            >
+              {t("admin.createCategory")}
+            </button>
+          )}
           <button
             onClick={() => setViewMode("grid")}
             className={`px-4 py-2 rounded-lg font-medium transition duration-300 ${
@@ -71,8 +85,15 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
 
       {!loading && categories.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-foreground/60">No categories available yet.</p>
+          <p className="text-foreground/60">{t("category.noCategories")}</p>
         </div>
+      )}
+
+      {isAdmin && (
+        <CreateCategoryDialog
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
       )}
     </div>
   )

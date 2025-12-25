@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDark, setIsDark] = useState(true)
   const { user, logout, isAdmin } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
 
   useEffect(() => {
     // Load theme preference from localStorage, default to dark
@@ -49,21 +51,25 @@ export default function Navigation() {
           href="/"
           className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity"
         >
-          The Curated Rank
+       <img src="/icon.svg"  className="w-10 h-10" />
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
           <Link href="/" className="text-foreground/80 hover:text-primary transition-colors">
-            Browse
+            {t("nav.browse")}
           </Link>
-          {isAdmin && user && (
-            <Link href="/admin" className="text-foreground/80 hover:text-primary transition-colors">
-              Dashboard
-            </Link>
-          )}
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          {/* Language Switcher */}
+          <button
+            onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+            className="px-3 py-1 glass text-foreground hover:bg-secondary/50 rounded-lg text-sm font-medium transition duration-300"
+            title={language === "en" ? "العربية" : "English"}
+          >
+            {language === "en" ? "AR" : "EN"}
+          </button>
+
           <button
             onClick={toggleDarkMode}
             className="p-2 hover:bg-secondary/50 rounded-lg transition-colors"
@@ -89,14 +95,14 @@ export default function Navigation() {
               onClick={handleLogout}
               className="px-4 py-2 glass text-foreground hover:bg-secondary/50 rounded-lg font-medium transition duration-300"
             >
-              Logout
+              {t("nav.logout")}
             </button>
           ) : (
             <Link
               href="/login"
               className="px-4 py-2 glass text-foreground hover:bg-secondary/50 rounded-lg font-medium transition duration-300"
             >
-              Login
+              {t("nav.login")}
             </Link>
           )}
         </div>
@@ -114,13 +120,14 @@ export default function Navigation() {
           <div className="absolute top-full left-0 right-0 glass border-b md:hidden">
             <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
               <Link href="/" className="text-foreground/80 hover:text-primary transition-colors">
-                Browse
+                {t("nav.browse")}
               </Link>
-              {isAdmin && user && (
-                <Link href="/admin" className="text-foreground/80 hover:text-primary transition-colors">
-                  Dashboard
-                </Link>
-              )}
+              <button
+                onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+                className="text-left text-foreground/80 hover:text-primary transition-colors"
+              >
+                {language === "en" ? "العربية" : "English"}
+              </button>
               <button
                 onClick={toggleDarkMode}
                 className="text-left text-foreground/80 hover:text-primary transition-colors"
@@ -132,11 +139,11 @@ export default function Navigation() {
                   onClick={handleLogout}
                   className="text-left text-foreground/80 hover:text-primary transition-colors"
                 >
-                  Logout
+                  {t("nav.logout")}
                 </button>
               ) : (
                 <Link href="/login" className="text-foreground/80 hover:text-primary transition-colors">
-                  Login
+                  {t("nav.login")}
                 </Link>
               )}
             </div>

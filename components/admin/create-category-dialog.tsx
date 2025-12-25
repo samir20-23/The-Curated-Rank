@@ -1,29 +1,80 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { uploadImage } from "@/lib/supabase"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
+import { useLanguage } from "@/contexts/language-context"
+import type { Category } from "@/lib/types"
 
 interface CreateCategoryDialogProps {
   isOpen: boolean
   onClose: () => void
+  editingCategory?: Category | null
 }
 
-export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategoryDialogProps) {
+export default function CreateCategoryDialog({ isOpen, onClose, editingCategory }: CreateCategoryDialogProps) {
   const [name, setName] = useState("")
   const [type, setType] = useState("") // Keep for backward compatibility
   const [tags, setTags] = useState<string[]>([])
   const [currentTag, setCurrentTag] = useState("")
+  const [useTypes, setUseTypes] = useState(true) // Checkbox for using types
   const [imageUrl, setImageUrl] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const { addCategory } = useFirebaseCategories()
+  const { addCategory, updateCategory } = useFirebaseCategories()
+  const { t } = useLanguage()
+
+  // Load editing category data
+  useEffect(() => {
+    if (editingCategory) {
+      setName(editingCategory.name)
+      setType(editingCategory.type || "")
+      setTags(editingCategory.tags || (editingCategory.type ? editingCategory.type.split(", ").map(t => t.trim()) : []))
+      setUseTypes(editingCategory.useTypes !== false) // Default to true if not set
+      setImageUrl(editingCategory.imageUrl || "")
+      setImageFile(null)
+    } else {
+      setName("")
+      setType("")
+      setTags([])
+      setCurrentTag("")
+      setUseTypes(true)
+      setImageUrl("")
+      setImageFile(null)
+    }
+  }, [editingCategory, isOpen])
 
   const handleAddTag = () => {
-    if (currentTag.trim() && !tags.includes(currentTag.trim())) {
-      setTags([...tags, currentTag.trim()])
+    if (currentTag.trim()) {
+      // Handle comma-separated values
+      const newTags = currentTag
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0 && !tags.includes(tag))
+      
+      if (newTags.length > 0) {
+        setTags([...tags, ...newTags])
+        setCurrentTag("")
+      }
+    }
+  }
+
+  const handleTagPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pastedText = e.clipboardData.getData("text")
+    // Split by comma and clean up
+    const newTags = pastedText
+      .split(",")
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0 && !tags.includes(tag))
+    
+    if (newTags.length > 0) {
+      setTags([...tags, ...newTags])
+      setCurrentTag("")
+    } else {
+      // If all tags already exist, just clear the input
       setCurrentTag("")
     }
   }
@@ -42,8 +93,16 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || (tags.length === 0 && !type)) {
-      setError("Name and at least one tag are required")
+    
+    // Validation: if name is empty, force image. If name is not empty, image is optional
+    if (!name && !imageUrl && !imageFile) {
+      setError("Name or image is required")
+      return
+    }
+
+    // If useTypes is checked, require tags
+    if (useTypes && tags.length === 0 && !type) {
+      setError("At least one tag is required when using types")
       return
     }
 
@@ -55,17 +114,28 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
 
       // Upload image if file provided
       if (imageFile) {
-        finalImageUrl = await uploadImage(imageFile, "category", name)
+        finalImageUrl = await uploadImage(imageFile, "category", name || "category")
       }
 
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, {
+          name,
+          type: type || tags.join(", "), // Keep type for backward compatibility
+          tags: tags.length > 0 ? tags : undefined,
+          useTypes: useTypes,
+          imageUrl: finalImageUrl || imageUrl || undefined,
+        })
+      } else {
       await addCategory({
         name,
         type: type || tags.join(", "), // Keep type for backward compatibility
         tags: tags.length > 0 ? tags : undefined,
+        useTypes: useTypes,
         image: "📌",
         imageUrl: finalImageUrl || undefined,
         createdAt: new Date(),
       })
+      }
 
       setName("")
       setType("")
@@ -81,12 +151,26 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
     }
   }
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold text-foreground mb-6">Create New Category</h2>
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-2xl font-bold text-foreground mb-6">
+          {editingCategory ? "Edit Category" : "Create New Category"}
+        </h2>
 
         {error && (
           <div className="mb-4 p-3 bg-destructive/20 border border-destructive/50 rounded-lg text-destructive text-sm">
@@ -108,12 +192,26 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">Tags (press Enter to add)</label>
+            <label className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                checked={useTypes}
+                onChange={(e) => setUseTypes(e.target.checked)}
+                className="w-4 h-4 rounded"
+                disabled={loading}
+              />
+              <span className="text-sm font-medium text-foreground">{t("admin.useTypes")} ({t("admin.useTypesDesc")})</span>
+            </label>
+            
+            {useTypes && (
+              <>
+                <label className="block text-sm font-medium text-slate-200 mb-2">Tags (press Enter to add)</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={currentTag}
                 onChange={(e) => setCurrentTag(e.target.value)}
+                onPaste={handleTagPaste}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault()
@@ -121,7 +219,7 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
                   }
                 }}
                 className="flex-1 rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="Add a tag"
+                placeholder="Add a tag (or paste comma-separated: drama, action, Documentary)"
                 disabled={loading}
               />
               <button
@@ -152,6 +250,8 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
                   </span>
                 ))}
               </div>
+            )}
+              </>
             )}
           </div>
 
@@ -188,7 +288,7 @@ export default function CreateCategoryDialog({ isOpen, onClose }: CreateCategory
               disabled={loading}
               className="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition duration-300 disabled:opacity-50"
             >
-              {loading ? "Creating..." : "Create"}
+              {loading ? (editingCategory ? "Saving..." : "Creating...") : (editingCategory ? "Save Changes" : "Create")}
             </button>
           </div>
         </form>

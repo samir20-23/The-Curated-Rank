@@ -38,7 +38,7 @@ export default function CategoryItemsManager({ category, onBack }: CategoryItems
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
           <button onClick={onBack} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

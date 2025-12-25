@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "browse": "Browse",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "category": {
+    "title": "Categories",
+    "subtitle": "Explore our curated collections",
+    "type": "Type",
+    "types": "Types",
+    "noCategories": "No categories available yet.",
+    "viewItems": "View Items"
+  },
+  "item": {
+    "title": "Items",
+    "noItems": "No items found",
+    "search": "Search items...",
+    "rank": "Rank",
+    "uncategorized": "Uncategorized"
+  },
+  "admin": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "createCategory": "Create Category",
+    "editCategory": "Edit Category",
+    "createItem": "Create Item",
+    "editItem": "Edit Item",
+    "manageItems": "Manage Items",
+    "deleteConfirm": "This action cannot be undone. All items in this category will be removed.",
+    "areYouSure": "Are you sure you want to delete this",
+    "finalDelete": "This is your final confirmation. This action cannot be undone.",
+    "categoryName": "Category Name",
+    "tags": "Tags",
+    "addTag": "Add",
+    "imageUrl": "Image URL",
+    "uploadImage": "Upload Image",
+    "useTypes": "Use types",
+    "useTypesDesc": "If unchecked, shows normal list",
+    "creating": "Creating...",
+    "saving": "Saving...",
+    "itemTitle": "Title",
+    "itemDescription": "Description",
+    "itemType": "Type",
+    "createNewType": "Or create new type",
+    "newTypeDesc": "This will be added to the category tags"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "back": "Back",
+    "name": "Name",
+    "description": "Description",
+    "image": "Image",
+    "type": "Type",
+    "optional": "Optional",
+    "required": "Required"
+  }
+}
+

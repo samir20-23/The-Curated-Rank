@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { uploadImage } from "@/lib/supabase"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
+import { useLanguage } from "@/contexts/language-context"
 import type { Item } from "@/lib/types"
 
 interface CreateItemDialogProps {
@@ -34,6 +35,7 @@ export default function CreateItemDialog({
   const [error, setError] = useState("")
   const { addItem, updateItem, items } = useFirebaseItems(categoryId)
   const { categories, updateCategory } = useFirebaseCategories()
+  const { t } = useLanguage()
   
   const category = categories.find(c => c.id === categoryId)
   const availableTags = category?.tags || (category?.type ? category.type.split(", ").map(t => t.trim()) : [])
@@ -65,8 +67,15 @@ export default function CreateItemDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title || !description) {
-      setError("Title and description are required")
+    
+    // Image is required - either URL or upload, but not both
+    if (imageUrl && imageFile) {
+      setError("Please use either image URL or upload, not both")
+      return
+    }
+
+    if (!imageUrl && !imageFile) {
+      setError("Image is required (URL or upload)")
       return
     }
 
@@ -78,11 +87,9 @@ export default function CreateItemDialog({
 
       // Upload image if file provided
       if (imageFile) {
-        // finalImageUrl = await uploadImage(imageFile)
-        // finalImageUrl = await uploadImage(imageFile, "items")
-        finalImageUrl = await uploadImage(imageFile, "items", title)
-
-
+        // If name is empty, don't use it for image name
+        const imageName = title?.trim() || `item-${Date.now()}`
+        finalImageUrl = await uploadImage(imageFile, "items", imageName)
       }
 
       // Determine final type: prioritize newType if provided, otherwise use selected type
@@ -97,11 +104,15 @@ export default function CreateItemDialog({
         })
       }
       
+      // If name is empty, don't save name/description
+      const itemTitle = title?.trim() || undefined
+      const itemDescription = description?.trim() || undefined
+      
       // Save item with final type
       if (editingItem) {
         await updateItem(editingItem.id, {
-          title,
-          description,
+          ...(itemTitle !== undefined && { title: itemTitle }),
+          ...(itemDescription !== undefined && { description: itemDescription }),
           type: finalType || undefined,
           imageUrl: finalImageUrl || undefined,
         })
@@ -109,8 +120,8 @@ export default function CreateItemDialog({
         const maxRank = items.length + 1
         await addItem({
           categoryId,
-          title,
-          description,
+          ...(itemTitle && { title: itemTitle }),
+          ...(itemDescription && { description: itemDescription }),
           type: finalType || undefined,
           image: "📌",
           imageUrl: finalImageUrl || undefined,
@@ -137,11 +148,24 @@ export default function CreateItemDialog({
     }
   }
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+      onEditClose?.()
+    }
+  }
+
   if (!isOpen && !editingItem) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-2xl font-bold text-foreground mb-6">
           {editingItem ? "Edit Item" : `Add to ${categoryName}`}
         </h2>
@@ -154,7 +178,9 @@ export default function CreateItemDialog({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Title</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Title <span className="text-foreground/60 text-xs">(Optional)</span>
+            </label>
             <input
               type="text"
               value={title}
@@ -166,7 +192,9 @@ export default function CreateItemDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Description <span className="text-foreground/60 text-xs">(Optional)</span>
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -178,7 +206,9 @@ export default function CreateItemDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Type</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Type <span className="text-destructive">*</span>
+            </label>
             {availableTags.length > 0 ? (
               <select
                 value={type}
@@ -221,7 +251,9 @@ export default function CreateItemDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Image URL (Optional)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Image URL <span className="text-destructive">*</span> <span className="text-foreground/60 text-xs">(or upload below)</span>
+            </label>
             <input
               type="url"
               value={imageUrl}
@@ -234,7 +266,9 @@ export default function CreateItemDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Upload Image (Optional)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Upload Image <span className="text-destructive">*</span>
+            </label>
             <input type="file" accept="image/*" onChange={handleImageChange} disabled={loading} className="w-full" />
             {imageFile && <p className="text-xs text-primary mt-2">Selected: {imageFile.name}</p>}
           </div>

@@ -3,6 +3,7 @@ export interface Category {
   name: string
   type: string // Keep for backward compatibility
   tags?: string[] // New tags array
+  useTypes?: boolean // If false, show normal list without type grouping
   image: string
   imageUrl?: string
   createdAt?: Date
@@ -11,8 +12,8 @@ export interface Category {
 export interface Item {
   id: string
   categoryId: string
-  title: string
-  description: string
+  title?: string // Optional
+  description?: string // Optional
   type?: string // Type selected from category tags
   image: string
   imageUrl?: string

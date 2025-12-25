@@ -5,11 +5,12 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import AnimatedBackground from "@/components/animated-background"
 import { AuthProvider } from "@/contexts/auth-context"
+import { LanguageProvider } from "@/contexts/language-context"
 
 const geist = Geist({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "The Curated Rank - Premium Content Discovery",
+  title: "Marwanscope - Premium Content Discovery",
   description: "Discover meticulously curated lists of movies, TV shows, music, actors, and gaming content.",
   generator: 'v0.app'
 }
@@ -38,11 +39,13 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${geist.className} bg-background text-foreground overflow-x-hidden`} suppressHydrationWarning>
-        <AuthProvider>
-          <AnimatedBackground />
-          {children}
-          <Analytics />
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AnimatedBackground />
+            {children}
+            <Analytics />
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

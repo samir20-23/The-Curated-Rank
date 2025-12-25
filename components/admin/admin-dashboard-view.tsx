@@ -12,6 +12,7 @@ export default function AdminDashboardView() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
   const handleDelete = async (category: Category) => {
     try {
@@ -30,7 +31,7 @@ export default function AdminDashboardView() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">Admin Dashboard</h1>
+          <h1 className="text-1xl md:text-2xl font-bold text-foreground">Admin Dashboard</h1>
           <p className="text-foreground/60 mt-2">Manage your curated content</p>
         </div>
         <button
@@ -85,6 +86,15 @@ export default function AdminDashboardView() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
+                    setEditingCategory(category)
+                  }}
+                  className="flex-1 px-3 py-2 glass text-primary hover:bg-primary/20 rounded-lg text-sm font-medium transition duration-300"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setDeleteTarget(category)
                   }}
                   className="flex-1 px-3 py-2 glass text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition duration-300"
@@ -109,7 +119,14 @@ export default function AdminDashboardView() {
         </div>
       )}
 
-      <CreateCategoryDialog isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      <CreateCategoryDialog 
+        isOpen={isCreateOpen || editingCategory !== null} 
+        onClose={() => {
+          setIsCreateOpen(false)
+          setEditingCategory(null)
+        }}
+        editingCategory={editingCategory}
+      />
 
       <DeleteConfirmation
         isOpen={deleteTarget !== null}
