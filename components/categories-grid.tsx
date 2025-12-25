@@ -27,7 +27,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-12 flex-wrap gap-4">
+      <div className="flex items-center justify-between mb-12 flex-wrap gap-4" style={{ width: "100%" }}>
         <div>
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{t("category.title")}</h2>
           <p className="text-foreground/60">{t("category.subtitle")}</p>
@@ -43,18 +43,16 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
           )}
           <button
             onClick={() => setViewMode("grid")}
-            className={`px-4 py-2 rounded-lg font-medium transition duration-300 ${
-              viewMode === "grid" ? "glass-strong text-primary" : "glass hover:bg-secondary/30"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition duration-300 ${viewMode === "grid" ? "glass-strong text-primary" : "glass hover:bg-secondary/30"
+              }`}
             style={viewMode === "grid" ? { boxShadow: "0 0 40px oklch(0.65 0.25 270 / 0.3)" } : {}}
           >
             Grid
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`px-4 py-2 rounded-lg font-medium transition duration-300 ${
-              viewMode === "list" ? "glass-strong text-primary" : "glass hover:bg-secondary/30"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition duration-300 ${viewMode === "list" ? "glass-strong text-primary" : "glass hover:bg-secondary/30"
+              }`}
             style={viewMode === "list" ? { boxShadow: "0 0 40px oklch(0.65 0.25 270 / 0.3)" } : {}}
           >
             List

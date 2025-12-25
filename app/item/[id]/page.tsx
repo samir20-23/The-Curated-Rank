@@ -257,7 +257,7 @@ export default function ItemDetailPage() {
                 {/* Poster */}
                 <div>
                   {poster ? (
-                    <img src={poster} alt={displayTitle} className="w-full rounded-xl shadow-2xl object-cover" />
+                    <img src={poster} alt={displayTitle} className=" rounded-xl shadow-2xl object-cover" />
                   ) : (
                     <div className="w-full aspect-[2/3] bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center rounded-xl">
                       <span className="text-6xl">📌</span>
@@ -350,7 +350,7 @@ export default function ItemDetailPage() {
             {similarMovies.length > 0 && (
               <div className="space-y-3 mt-8">
                 <h2 className="text-2xl font-bold text-foreground">You might also like</h2>
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" , marginTop:"160px"}}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "160px" }}>
                   <div className="flex flex-wrap gap-4" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                     {similarMovies.map((movie: any, idx: number) => {
                       const title = movie.title || movie.name || "Untitled"

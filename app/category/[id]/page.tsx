@@ -10,9 +10,16 @@ export default function CategoryPage() {
   const categoryId = params.id as string
 
   return (
-    <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative">
+    <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative" >
       <Navigation />
-      <main className="container mx-auto px-4   " style={{paddingTop: "15px"}}>
+      <main className="container mx-auto px-4   " style={{
+        paddingTop: "20px",
+        width: "100%",
+        padding: 0,
+        margin: 0,
+        maxWidth: "none"
+
+      }}>
         <CategoryListView categoryId={categoryId} onBack={() => window.history.back()} />
       </main>
       <Footer />

@@ -198,7 +198,7 @@
 .bg-particle {
   position: absolute;
   border-radius: 50%;
-}
+} 
 
 .scroll-smooth {
   scroll-behavior: smooth;

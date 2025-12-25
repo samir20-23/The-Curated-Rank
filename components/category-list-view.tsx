@@ -130,8 +130,8 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
         // Drag between rows (types) or within same type
         const sourceType = draggedType || undefined
         const targetType = type || undefined
-        const sourceItems = sourceType ? (itemsByType?.[sourceType] || []) : items.filter(i => !i.type).sort((a,b)=>a.rank-b.rank)
-        const targetItems = targetType ? (itemsByType?.[targetType] || []) : items.filter(i => !i.type).sort((a,b)=>a.rank-b.rank)
+        const sourceItems = sourceType ? (itemsByType?.[sourceType] || []) : items.filter(i => !i.type).sort((a, b) => a.rank - b.rank)
+        const targetItems = targetType ? (itemsByType?.[targetType] || []) : items.filter(i => !i.type).sort((a, b) => a.rank - b.rank)
 
         const draggedIndex = sourceItems.findIndex((i) => i.id === draggedId)
         const targetIndex = targetId ? targetItems.findIndex((i) => i.id === targetId) : targetItems.length
@@ -252,7 +252,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByType || {}).length === 0 || Object.keys(itemsByType || {}).length === 1) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between " style={{ padding: "20px 40px 0px 40px" }}>
           <div className="flex items-center gap-1">
             <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +273,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           )}
         </div>
 
-        <div className="glass-strong rounded-xl p-4 space-y-3">
+        <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }} >
           <div className="flex gap-2 flex-wrap">
             <input
               type="text"
@@ -339,7 +339,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                 className={`group rounded-lg overflow-hidden transition-all flex items-center gap-4 p-4 ${isAdmin ? "cursor-grab" : "cursor-pointer"} ${draggedId === item.id ? "opacity-50 scale-95" : ""}`}
                 style={{ background: undefined }}
               >
-                <div className="absolute inset-0 pointer-events-none rounded-lg bg-white/50 dark:bg-black/50 opacity-60" />
+                <div className="absolute inset-0 pointer-events-none rounded-lg  opacity-60" />
 
                 <div className="relative w-full flex items-center gap-4">
                   <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-move z-10">
@@ -453,7 +453,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8" style={{ padding: "20px 40px 0px 40px" }}>
         <div className="flex items-center gap-1">
           <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,7 +475,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
       </div>
 
       {/* Filter */}
-      <div className="glass-strong rounded-xl p-4 space-y-3">
+      <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }}>
         <div className="flex gap-2 flex-wrap">
           <input
             type="text"
@@ -511,117 +511,163 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
           <p className="text-foreground/60">{t("common.loading")}</p>
         </div>
       ) : (
-        <div className="space-y-6 w-full pb-4">
-          {typeColumns
-            .filter(type => !filterType || type === filterType)
-            .map((type) => {
-              const typeItems = getFilteredItemsByType(type)
-              if (typeItems.length === 0 && (filterText || filterRank || filterType)) return null
+        <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4 h-[1000px]`} style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none", width: "100%",
+          paddingLeft: "20px",
+          border: "1px solid rgba(161, 161, 161, 0.41)",
+          boxShadow: "rgba(206, 177, 199, 0.71) 0px 0px 100px -68px inset"
+        }}>
+          <div className={`flex gap-6  ${isSingleType ? "justify-center" : ""}`} style={{ minWidth: isSingleType ? "auto" : "max-content" }}>
+            {typeColumns
+              .filter(type => !filterType || type === filterType) // Filter types if filterType is set
+              .map((type) => {
+                const typeItems = getFilteredItemsByType(type)
+                if (typeItems.length === 0 && (filterText || filterRank || filterType)) return null
 
-              return (
-                <div key={type} className="w-full space-y-3">
+                return (
                   <div
-                    className="glass-strong rounded-lg p-4"
-                    onDragOver={(e) => { if (isAdmin) e.preventDefault() }}
-                    onDrop={async (e) => {
-                      if (!isAdmin) return
-                      e.preventDefault()
-                      // If dropped on empty space in the row, append to end
-                      const dragged = draggedId
-                      if (!dragged) return
-                      await handleDrop(undefined, type)
-                    }}
+                    key={type}
+                    className={`${isSingleType ? "w-full max-w-4xl" : "flex-shrink-0 w-64"} space-y-4`}
+                    style={{ minWidth: isSingleType ? "auto" : "256px" }}
                   >
-                    {editingType === type ? (
-                      <input
-                        type="text"
-                        value={editingTypeValue}
-                        onChange={(e) => setEditingTypeValue(e.target.value)}
-                        onBlur={handleTypeSave}
-                        onKeyDown={handleTypeKeyDown}
-                        className="text-xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-2"
-                        autoFocus
-                      />
-                    ) : (
-                      <h3
-                        className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
-                        onDoubleClick={() => handleTypeDoubleClick(type)}
-                        title={isAdmin ? "Double-click to edit" : ""}
-                      >
-                        {type}
-                      </h3>
-                    )}
-                    <span className="text-foreground/60 text-sm">({typeItems.length} items)</span>
-                  </div>
+                    {/* Type Header */}
+                    <div className="glass-strong rounded-lg p-4 sticky top-0 z-10" >
+                      {editingType === type ? (
+                        <input
+                          type="text"
+                          value={editingTypeValue}
+                          onChange={(e) => setEditingTypeValue(e.target.value)}
+                          onBlur={handleTypeSave}
+                          onKeyDown={handleTypeKeyDown}
+                          className="text-xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-2"
+                          autoFocus
+                        />
+                      ) : (
+                        <h3
+                          className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
+                          onDoubleClick={() => handleTypeDoubleClick(type)}
+                          title={isAdmin ? "Double-click to edit" : ""}
+                        >
+                          {type}
+                        </h3>
+                      )}
+                      <span className="text-foreground/60 text-sm">({typeItems.length} items)</span>
+                    </div>
 
-                  <div className={`space-y-3 max-h-[1000px] overflow-y-auto scrollbar-hide ${autoScrollMap[type] === 'up' ? 'auto-scroll-up' : autoScrollMap[type] === 'down' ? 'auto-scroll-down' : ''}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {typeItems.map((item) => (
-                      <div
-                        key={item.id}
-                        draggable={isAdmin}
-                        onDragStart={() => handleDragStart(item.id, type)}
-                        onDragOver={(e) => handleDragOver(e, item.id)}
-                        onDragEnd={() => {
-                          setDraggedId(null)
-                          setDragDirection(null)
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          handleDrop(item.id, type)
-                        }}
-                        onMouseDown={(e) => {
-                          if (!isAdmin || (e.target as HTMLElement).closest('button')) {
+                    {/* Items Column - Vertical Scroll */}
+                    <div
+                      className={`space-y-3 max-h-[1000px] overflow-y-auto scrollbar-hide ${autoScrollMap[type] === 'up' ? 'auto-scroll-up' : autoScrollMap[type] === 'down' ? 'auto-scroll-down' : ''}`}
+
+                    >
+
+                      {typeItems.map((item, index) => (
+                        <div
+                          key={item.id}
+                          draggable={isAdmin}
+                          onDragStart={() => handleDragStart(item.id, type)}
+                          onDragOver={(e) => handleDragOver(e, item.id)}
+                          onDragEnd={() => {
+                            setDraggedId(null)
+                            setDragDirection(null)
+                          }}
+                          onDrop={(e) => {
                             e.preventDefault()
-                          }
-                        }}
-                        onClick={(e) => {
-                          if (!draggedId && !(e.target as HTMLElement).closest('button')) {
-                            router.push(`/item/${item.id}`)
-                          }
-                        }}
-                        className={`group glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-50 scale-95 rotate-2 z-50 cursor-grabbing" : isAdmin ? "cursor-grab" : "cursor-pointer"} ${draggedId && draggedId !== item.id ? "hover:scale-105" : ""}`}
-                        style={{ width: '100%', minHeight: '120px' }}
-                      >
-                        <div className="p-3 space-y-2">
-                          {isAdmin && draggedId === item.id && dragDirection && (
-                            <div className={`absolute top-2 right-2 text-2xl animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}>
-                              {dragDirection === "up" ? "⬆️" : "⬇️"}
-                            </div>
-                          )}
-                          {isAdmin && (
-                            <div className="flex justify-end gap-2">
-                              <button style={{ cursor: "pointer" }}
-                                onClick={(e) => { e.stopPropagation(); setEditingItem(item) }}
-                                className="p-1 glass text-primary hover:bg-primary/20 rounded text-xs"
-                              >{t("admin.edit")}</button>
-                              <button style={{ cursor: "pointer" }}
-                                onClick={(e) => { e.stopPropagation(); handleDeleteClick(item) }}
-                                className="p-1 glass text-red-400 hover:bg-red-500/20 rounded text-xs">
-                                {t("admin.delete")}
-                              </button>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">#{item.rank}</span>
-                          </div>
-                          <div className="w-full overflow-hidden rounded">
-                            {item.imageUrl ? (
-                              <img src={item.imageUrl || "/placeholder.svg"} alt={item.title ?? ""} className="w-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                                <span className="text-2xl">📌</span>
+                            handleDrop(item.id, type)
+                          }}
+                          onMouseDown={(e) => {
+                            if (!isAdmin || (e.target as HTMLElement).closest('button')) {
+                              e.preventDefault()
+                            }
+                          }}
+                          onClick={(e) => {
+                            // Only navigate if not dragging and not clicking on buttons
+                            if (!draggedId && !(e.target as HTMLElement).closest('button')) {
+                              router.push(`/item/${item.id}`)
+                            }
+                          }}
+                          className={`group glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-50 scale-95 rotate-2 z-50 cursor-grabbing" : isAdmin ? "cursor-grab" : "cursor-pointer"
+                            } ${draggedId && draggedId !== item.id ? "hover:scale-105" : ""}`}
+                          style={{
+                            width: "100%",
+                            minHeight: "120px",
+                          }}
+                        >
+                          <div className="p-3 space-y-2">
+                            {/* Drag direction indicator */}
+                            {isAdmin && draggedId === item.id && dragDirection && (
+                              <div className={`absolute top-2 right-2 text-2xl animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"
+                                }`}>
+                                {dragDirection === "up" ? "⬆️" : "⬇️"}
                               </div>
                             )}
+                            {isAdmin && (
+                              <div className="flex justify-end gap-2">
+                                <button style={{ cursor: "pointer" }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setEditingItem(item)
+                                  }}
+                                  className="p-1 glass text-primary hover:bg-primary/20 rounded text-xs"
+                                >
+                                  {t("admin.edit")}
+                                </button>
+                                <button style={{ cursor: "pointer" }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteClick(item)
+                                  }}
+                                  className="p-1 glass text-red-400 hover:bg-red-500/20 rounded text-xs"
+                                >
+                                  {t("admin.delete")}
+                                </button>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                                #{item.rank}
+                              </span>
+                            </div>
+                            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors cursor-move"
+                              style={{
+                                position: "absolute",
+                                left: "-10px",
+                                top: "108px"
+                              }}>
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 3a1 1 0 100 2 1 1 0 000-2zM10 8a1 1 0 100 2 1 1 0 000-2zM10 13a1 1 0 100 2 1 1 0 000-2z" />
+                              </svg>
+                            </div>
+
+                            <div className="w-full  overflow-hidden rounded">
+                              {item.imageUrl ? (
+                                <img
+                                  src={item.imageUrl || "/placeholder.svg"}
+                                  alt={item.title || `Item ${item.rank}`}
+                                  className="w-full  object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+                                  <span className="text-2xl">📌</span>
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                              {item.title || `Item ${item.rank}`}
+                            </h4>
+                            {item.description && (
+                              <p className="text-foreground/60 text-xs line-clamp-2 overflow-hidden">
+                                {item.description}
+                              </p>
+                            )}
                           </div>
-                          <h4 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">{item.title ?? ""}</h4>
-                          {item.description && <p className="text-foreground/60 text-xs line-clamp-2 overflow-hidden">{item.description}</p>}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+          </div>
         </div>
       )}
 

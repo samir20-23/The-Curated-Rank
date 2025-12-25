@@ -9,9 +9,9 @@ import CategoryCharts from "@/components/category-charts"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[rgba(0,0,0,0.5)]  relative">
+    <div className="min-h-screen bg-[rgba(0,0,0,0.5)]  relative" >
       <Navigation />
-      <Hero />
+      <Hero /> 
       <main className="container mx-auto px-4  " style={{paddingTop: "15px"}}>
         <CategoriesGrid />
       </main>

@@ -95,6 +95,13 @@ export default function CreateItemDialog({
       // Determine final type: prioritize newType if provided, otherwise use selected type
       const finalType = newType.trim() || type
 
+      // If category has types, require selecting/creating one
+      if ((availableTags.length > 0) && !finalType) {
+        setError("Please select a type or create a new one.")
+        setLoading(false)
+        return
+      }
+
       // If new type is provided and not in available tags, add it to category tags
       if (newType.trim() && category && !availableTags.includes(newType.trim())) {
         const updatedTags = [...availableTags, newType.trim()]
