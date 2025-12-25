@@ -53,7 +53,7 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
         .split(",")
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0 && !tags.includes(tag))
-      
+
       if (newTags.length > 0) {
         setTags([...tags, ...newTags])
         setCurrentTag("")
@@ -69,7 +69,7 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
       .split(",")
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0 && !tags.includes(tag))
-    
+
     if (newTags.length > 0) {
       setTags([...tags, ...newTags])
       setCurrentTag("")
@@ -93,7 +93,7 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validation: if name is empty, force image. If name is not empty, image is optional
     if (!name && !imageUrl && !imageFile) {
       setError("Name or image is required")
@@ -117,25 +117,28 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
         finalImageUrl = await uploadImage(imageFile, "category", name || "category")
       }
 
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, {
-          name,
-          type: type || tags.join(", "), // Keep type for backward compatibility
-          tags: tags.length > 0 ? tags : undefined,
-          useTypes: useTypes,
-          imageUrl: finalImageUrl || imageUrl || undefined,
-        })
-      } else {
-      await addCategory({
+      const payload: any = {
         name,
-        type: type || tags.join(", "), // Keep type for backward compatibility
-        tags: tags.length > 0 ? tags : undefined,
+        type: type || tags.join(", "),
         useTypes: useTypes,
         image: "📌",
-        imageUrl: finalImageUrl || undefined,
         createdAt: new Date(),
-      })
       }
+
+      if (useTypes && tags.length > 0) {
+        payload.tags = tags
+      }
+
+      if (finalImageUrl) {
+        payload.imageUrl = finalImageUrl
+      }
+
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, payload)
+      } else {
+        await addCategory(payload)
+      }
+
 
       setName("")
       setType("")
@@ -160,11 +163,11 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
   if (!isOpen) return null
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div 
+      <div
         className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -202,55 +205,55 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
               />
               <span className="text-sm font-medium text-foreground">{t("admin.useTypes")} ({t("admin.useTypesDesc")})</span>
             </label>
-            
+
             {useTypes && (
               <>
                 <label className="block text-sm font-medium text-slate-200 mb-2">Tags (press Enter to add)</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={currentTag}
-                onChange={(e) => setCurrentTag(e.target.value)}
-                onPaste={handleTagPaste}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    handleAddTag()
-                  }
-                }}
-                className="flex-1 rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                placeholder="Add a tag (or paste comma-separated: drama, action, Documentary)"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                disabled={loading}
-                className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
-              >
-                Add
-              </button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm flex items-center gap-2"
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={currentTag}
+                    onChange={(e) => setCurrentTag(e.target.value)}
+                    onPaste={handleTagPaste}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleAddTag()
+                      }
+                    }}
+                    className="flex-1 rounded-lg bg-slate-800 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    placeholder="Add a tag (or paste comma-separated: drama, action, Documentary)"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    disabled={loading}
+                    className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
                   >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      disabled={loading}
-                      className="hover:text-destructive transition-colors"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+                    Add
+                  </button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm flex items-center gap-2"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          disabled={loading}
+                          className="hover:text-destructive transition-colors"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>

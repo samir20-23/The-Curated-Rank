@@ -44,7 +44,7 @@ export function useFirebaseCategories() {
   const addCategory = async (data: Omit<Category, "id">) => {
     await addDoc(collection(db, "categories"), data)
   }
-
+ 
   const updateCategory = async (id: string, data: Partial<Category>) => {
     await updateDoc(doc(db, "categories", id), data)
   }

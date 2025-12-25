@@ -42,7 +42,12 @@ export function useFirebaseItems(categoryId?: string) {
 
   const addItem = async (data: Omit<Item, "id">) => {
     try {
-      await addDoc(collection(db, "items"), data)
+      const payload: any = { ...data }
+
+      if (Array.isArray(payload.tags) && payload.tags.length === 0) delete payload.tags
+      if (payload.type === "" || payload.type === undefined) delete payload.type
+
+      await addDoc(collection(db, "items"), payload)
     } catch (err) {
       setError((err as Error).message)
       throw err
@@ -51,7 +56,12 @@ export function useFirebaseItems(categoryId?: string) {
 
   const updateItem = async (id: string, data: Partial<Item>) => {
     try {
-      await updateDoc(doc(db, "items", id), data)
+      const payload: any = { ...data }
+
+      if (Array.isArray(payload.tags) && payload.tags.length === 0) delete payload.tags
+      if (payload.type === "" || payload.type === undefined) delete payload.type
+
+      await updateDoc(doc(db, "items", id), payload)
     } catch (err) {
       setError((err as Error).message)
       throw err
@@ -92,7 +102,7 @@ export function useFirebaseItems(categoryId?: string) {
         const itemsToUpdate = items
           .filter(item => item.id !== id && item.rank > deletedRank)
           .map(item => ({ ...item, rank: item.rank - 1 }))
-        
+
         if (itemsToUpdate.length > 0) {
           const batch = writeBatch(db)
           itemsToUpdate.forEach((item) => {
