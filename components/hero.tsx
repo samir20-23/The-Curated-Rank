@@ -2,13 +2,22 @@
 
 export default function Hero() {
   return (
-    <section className="relative py-12 md:py-16 overflow-hidden">
+    <section className="relative py-12 md:py-20 overflow-hidden   from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Discover & Explore</h2>
-          <p className="text-foreground/60 mb-4">Curated collections of your favorite content</p>
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Discover & Explore
+          </h1>
+          <p className="text-white/70 mb-6 text-lg md:text-xl">
+            Welcome to <span className="font-semibold">MarwanRank</span> — curated top lists of movies, shows, and content just for you.
+            Browse, explore, and find your favorites easily.
+          </p>
+          <p className="text-white/50 text-sm md:text-base">
+            Scroll down to see the top rankings, newest collections, and curated content from various categories.
+          </p>
         </div>
       </div>
+      <div className="absolute inset-0  from-gray-900 to-transparent pointer-events-none" />
     </section>
   )
 }

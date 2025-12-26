@@ -202,7 +202,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           resetDragState()
           return
         }
-        
+
         let serverTargetIndex: number
         if (typeof dropIndex === "number") {
           serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
@@ -213,19 +213,19 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         } else {
           serverTargetIndex = targetServer.length
         }
-        
+
         // Ensure target index is within bounds
         serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, targetServer.length))
-        
+
         // If same type, work with single array for proper reordering
         if (sourceType === targetType) {
           const reorderedItems = [...targetServer]
           const [draggedItem] = reorderedItems.splice(sourceIndex, 1)
-          
+
           // Adjust target index if moving forward in the list
           const adjustedTargetIndex = sourceIndex < serverTargetIndex ? serverTargetIndex - 1 : serverTargetIndex
           reorderedItems.splice(adjustedTargetIndex, 0, draggedItem)
-          
+
           // Update all ranks
           const updates = reorderedItems.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
           await updateRanks(updates)
@@ -235,10 +235,10 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           const [draggedItem] = newSource.splice(sourceIndex, 1)
           const newTarget = [...targetServer]
           newTarget.splice(serverTargetIndex, 0, draggedItem)
-          
+
           const sourceUpdates = newSource.map((item, idx) => ({ ...item, rank: idx + 1 }))
           const targetUpdates = newTarget.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
-          
+
           await updateItem(draggedId, { type: targetType || undefined })
           await updateRanks([...sourceUpdates, ...targetUpdates])
         }
@@ -262,7 +262,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         } else {
           serverTargetIndex = serverAll.length
         }
-        
+
         // Ensure target index is within bounds
         serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, serverAll.length))
         const newItems = [...serverAll]
@@ -445,34 +445,34 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           if (!isAdmin || !draggedId || draggedId === item.id) return
           e.preventDefault()
           e.stopPropagation()
-          
+
           // Set drag over type and calculate index
           if (type !== undefined) {
             setDragOverType(type)
           } else {
             setDragOverType(null)
           }
-          
+
           // Calculate drop position based on mouse position
           const rect = e.currentTarget.getBoundingClientRect()
           const y = e.clientY - rect.top
           const midPoint = rect.height / 2
-          const calculatedIndex = indexInMerged !== undefined 
+          const calculatedIndex = indexInMerged !== undefined
             ? (y < midPoint ? indexInMerged : indexInMerged + 1)
             : (type !== undefined ? 0 : 0)
-          
+
           setDragOverIndex(calculatedIndex)
         }}
         onDrop={(e) => {
           if (!isAdmin || !draggedId || draggedId === item.id) return
           e.preventDefault()
           e.stopPropagation()
-          
+
           // Calculate drop position based on mouse position
           const rect = e.currentTarget.getBoundingClientRect()
           const y = e.clientY - rect.top
           const midPoint = rect.height / 2
-          
+
           // Use the calculated drop index if available, otherwise use item position
           let dropIndex: number | undefined
           if (indexInMerged !== undefined) {
@@ -480,7 +480,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           } else if (dragOverIndex !== null) {
             dropIndex = dragOverIndex
           }
-          
+
           // Pass the calculated index - this is the key for same-row drops
           handleDrop(item.id, type, dropIndex)
         }}
@@ -548,7 +548,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
           <div
             className="w-full overflow-hidden rounded"
-            style={{ pointerEvents: "none"  }}
+            style={{ pointerEvents: "none" }}
             onClick={(e) => {
               if (!draggedId && !(e.target as HTMLElement).closest("button")) {
                 router.push(`/item/${item.id}`)
@@ -574,7 +574,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           </div>
 
           <h4 className="font-bold text-foreground text-[10px] line-clamp-1 group-hover:text-primary transition-colors" style={{ pointerEvents: "none" }}>
-            {item.title || `Item ${item.rank}`}
+            {item.title}
           </h4>
           {item.description && (
             <p className="text-foreground/60 text-[9px] line-clamp-1 overflow-hidden" style={{ pointerEvents: "none" }}>
@@ -626,7 +626,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           )}
         </div>
 
-        <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }}>
+        <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 20px 12px 20px" }}>
           <div className="flex gap-2 flex-wrap">
             <input
               type="text"
@@ -793,7 +793,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         )}
       </div>
 
-      <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }}>
+      <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 20px 12px 20px" }}>
         <div className="flex gap-2 flex-wrap">
           <input
             type="text"
@@ -835,9 +835,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             width: "100%",
-            paddingLeft: "20px",
-            border: "1px solid rgba(161, 161, 161, 0.41)",
-            boxShadow: "rgba(206, 177, 199, 0.71) 0px 0px 100px -68px inset",
+            paddingLeft: "20px"
           }}
         >
           <div
@@ -854,9 +852,10 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                   <div
                     key={type}
                     className={`${isSingleType ? "w-full max-w-4xl" : "flex-shrink-0 w-64"} space-y-4`}
-                    style={{ minWidth: isSingleType ? "auto" : "256px" }}
+                    style={{ minWidth: isSingleType ? "auto" : "156px", width: "160px" }}
+
                   >
-                    <div className="glass-strong rounded-lg p-4 sticky top-0 z-10">
+                    <div className="glass-strong rounded-lg p-1 sticky top-0 z-10" style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
                       {editingType === type ? (
                         <input
                           type="text"
@@ -864,19 +863,19 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                           onChange={(e) => setEditingTypeValue(e.target.value)}
                           onBlur={handleTypeSave}
                           onKeyDown={handleTypeKeyDown}
-                          className="text-xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-2"
+                          className="text-sm font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-1"
                           autoFocus
                         />
                       ) : (
                         <h3
-                          className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
+                          className=" font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
                           onDoubleClick={() => handleTypeDoubleClick(type)}
                           title={isAdmin ? "Double-click to edit" : ""}
-                        >
+                          style={{ fontSize: "13px", textAlign: "center" }}>
                           {type}
                         </h3>
                       )}
-                      <span className="text-foreground/60 text-sm">({merged.length} items)</span>
+                      <span className="text-foreground/60 " style={{ fontSize: "8px" }}>({merged.length} {category?.name})</span>
                     </div>
 
                     <div
