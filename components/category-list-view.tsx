@@ -202,22 +202,46 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           resetDragState()
           return
         }
+        
         let serverTargetIndex: number
-        if (typeof dropIndex === "number") serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
-        else if (targetId) {
+        if (typeof dropIndex === "number") {
+          serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
+        } else if (targetId) {
           const visualIdx = mergedTarget.findIndex((i) => i.id === targetId)
           const vi = visualIdx === -1 ? mergedTarget.length : visualIdx
           serverTargetIndex = visualIndexToServerIndex(mergedTarget, vi)
-        } else serverTargetIndex = targetServer.length
-        const newSource = [...sourceServer]
-        const [draggedItem] = newSource.splice(sourceIndex, 1)
-        const newTarget = [...targetServer]
-        if (sourceType === targetType && sourceIndex < serverTargetIndex) serverTargetIndex -= 1
-        newTarget.splice(serverTargetIndex, 0, draggedItem)
-        const sourceUpdates = newSource.map((item, idx) => ({ ...item, rank: idx + 1 }))
-        const targetUpdates = newTarget.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
-        if (sourceType !== targetType) await updateItem(draggedId, { type: targetType || undefined })
-        await updateRanks([...sourceUpdates, ...targetUpdates])
+        } else {
+          serverTargetIndex = targetServer.length
+        }
+        
+        // Ensure target index is within bounds
+        serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, targetServer.length))
+        
+        // If same type, work with single array for proper reordering
+        if (sourceType === targetType) {
+          const reorderedItems = [...targetServer]
+          const [draggedItem] = reorderedItems.splice(sourceIndex, 1)
+          
+          // Adjust target index if moving forward in the list
+          const adjustedTargetIndex = sourceIndex < serverTargetIndex ? serverTargetIndex - 1 : serverTargetIndex
+          reorderedItems.splice(adjustedTargetIndex, 0, draggedItem)
+          
+          // Update all ranks
+          const updates = reorderedItems.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
+          await updateRanks(updates)
+        } else {
+          // Different types - move between rows
+          const newSource = [...sourceServer]
+          const [draggedItem] = newSource.splice(sourceIndex, 1)
+          const newTarget = [...targetServer]
+          newTarget.splice(serverTargetIndex, 0, draggedItem)
+          
+          const sourceUpdates = newSource.map((item, idx) => ({ ...item, rank: idx + 1 }))
+          const targetUpdates = newTarget.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
+          
+          await updateItem(draggedId, { type: targetType || undefined })
+          await updateRanks([...sourceUpdates, ...targetUpdates])
+        }
       } else {
         const serverAll = getServerAll()
         const mergedAll = mergeServerAndTempsForType(undefined)
@@ -227,12 +251,20 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           return
         }
         let serverTargetIndex: number
-        if (typeof dropIndex === "number") serverTargetIndex = visualIndexToServerIndex(mergedAll, dropIndex)
-        else if (targetId) {
+        // Prioritize dropIndex - this is the calculated position from drag over
+        if (typeof dropIndex === "number") {
+          serverTargetIndex = visualIndexToServerIndex(mergedAll, dropIndex)
+        } else if (targetId) {
+          // If no dropIndex, calculate from target item position
           const visualIdx = mergedAll.findIndex((i) => i.id === targetId)
           const vi = visualIdx === -1 ? mergedAll.length : visualIdx
           serverTargetIndex = visualIndexToServerIndex(mergedAll, vi)
-        } else serverTargetIndex = serverAll.length
+        } else {
+          serverTargetIndex = serverAll.length
+        }
+        
+        // Ensure target index is within bounds
+        serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, serverAll.length))
         const newItems = [...serverAll]
         const [draggedItem] = newItems.splice(sourceIndex, 1)
         if (sourceIndex < serverTargetIndex) serverTargetIndex -= 1
@@ -409,6 +441,49 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             e.dataTransfer.effectAllowed = "move"
           } catch { }
         }}
+        onDragOver={(e) => {
+          if (!isAdmin || !draggedId || draggedId === item.id) return
+          e.preventDefault()
+          e.stopPropagation()
+          
+          // Set drag over type and calculate index
+          if (type !== undefined) {
+            setDragOverType(type)
+          } else {
+            setDragOverType(null)
+          }
+          
+          // Calculate drop position based on mouse position
+          const rect = e.currentTarget.getBoundingClientRect()
+          const y = e.clientY - rect.top
+          const midPoint = rect.height / 2
+          const calculatedIndex = indexInMerged !== undefined 
+            ? (y < midPoint ? indexInMerged : indexInMerged + 1)
+            : (type !== undefined ? 0 : 0)
+          
+          setDragOverIndex(calculatedIndex)
+        }}
+        onDrop={(e) => {
+          if (!isAdmin || !draggedId || draggedId === item.id) return
+          e.preventDefault()
+          e.stopPropagation()
+          
+          // Calculate drop position based on mouse position
+          const rect = e.currentTarget.getBoundingClientRect()
+          const y = e.clientY - rect.top
+          const midPoint = rect.height / 2
+          
+          // Use the calculated drop index if available, otherwise use item position
+          let dropIndex: number | undefined
+          if (indexInMerged !== undefined) {
+            dropIndex = y < midPoint ? indexInMerged : indexInMerged + 1
+          } else if (dragOverIndex !== null) {
+            dropIndex = dragOverIndex
+          }
+          
+          // Pass the calculated index - this is the key for same-row drops
+          handleDrop(item.id, type, dropIndex)
+        }}
         onDragEnd={handleDragEnd}
         onMouseDown={(e) => {
           if (!isAdmin || (e.target as HTMLElement).closest("button")) {
@@ -424,7 +499,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         <div className="p-3 space-y-2">
           {isAdmin && draggedId === item.id && dragDirection && (
             <div
-              className={`absolute top-2 right-2 text-2xl animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}
+              className={`absolute top-2 right-2 text-base animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}
             >
               {dragDirection === "up" ? "⬆️" : "⬇️"}
             </div>
@@ -460,7 +535,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                 }}
                 className="p-1 glass text-foreground hover:bg-secondary/20 rounded text-xs"
               >
-                Duplicate
+                Dup
               </button>
             </div>
           )}
@@ -472,7 +547,8 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           </div>
 
           <div
-            className="w-full overflow-hidden rounded pointer-events-none"
+            className="w-full overflow-hidden rounded"
+            style={{ pointerEvents: "none"  }}
             onClick={(e) => {
               if (!draggedId && !(e.target as HTMLElement).closest("button")) {
                 router.push(`/item/${item.id}`)
@@ -483,24 +559,25 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
               <img
                 src={item.imageUrl || "/placeholder.svg"}
                 alt={item.title || `Item ${item.rank}`}
-                className="w-full object-cover"
+                className="w-full h-full object-cover"
                 draggable={false}
+                style={{ pointerEvents: "none", objectFit: "cover" }}
               />
             ) : (
               <div
                 className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center"
-                style={{ minHeight: `${itemMinHeight / 2}px` }}
+                style={{ minHeight: "35px", pointerEvents: "none" }}
               >
-                <span className="text-2xl">📌</span>
+                <span className="text-base">📌</span>
               </div>
             )}
           </div>
 
-          <h4 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors pointer-events-none">
+          <h4 className="font-bold text-foreground text-[10px] line-clamp-1 group-hover:text-primary transition-colors" style={{ pointerEvents: "none" }}>
             {item.title || `Item ${item.rank}`}
           </h4>
           {item.description && (
-            <p className="text-foreground/60 text-xs line-clamp-2 overflow-hidden pointer-events-none">
+            <p className="text-foreground/60 text-[9px] line-clamp-1 overflow-hidden" style={{ pointerEvents: "none" }}>
               {item.description}
             </p>
           )}
@@ -610,7 +687,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                       if (!isAdmin || !draggedId) return
                       e.preventDefault()
                       e.stopPropagation()
-                      setDragOverType(undefined)
+                      setDragOverType(null)
                       const container = e.currentTarget.parentElement as Element
                       if (container) {
                         const calculatedIndex = computeIndexFromContainer(container, e.clientY)
@@ -803,7 +880,9 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                     </div>
 
                     <div
-                      ref={(el) => (columnsRef.current[type] = el)}
+                      ref={(el) => {
+                        columnsRef.current[type] = el || null
+                      }}
                       className={`space-y-3 max-h-[2000px] overflow-y-auto relative ${isDragging ? "overflow-y-scroll" : ""}`}
                       style={{
                         scrollbarWidth: "none",
