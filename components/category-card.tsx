@@ -24,6 +24,10 @@ export default function CategoryCard({ id, title, type, imageUrl, onClick }: Cat
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const category = categories.find(c => c.id === id)
+  // Get types from tags or type field
+  const categoryTypes = category?.tags && category.tags.length > 0 
+    ? category.tags.join(", ") 
+    : (category?.type || type || "")
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -77,7 +81,11 @@ export default function CategoryCard({ id, title, type, imageUrl, onClick }: Cat
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div>
             <h3 className="text-2xl font-bold text-foreground">{title}</h3>
-            <p className="text-sm line-clamp-7 text-foreground" style={{ opacity: 0.5 }}>{type}</p>
+            {categoryTypes && (
+              <p className="text-xs line-clamp-7 text-foreground" style={{ opacity: 0.5 }}>
+                {categoryTypes}
+              </p>
+            )}
           </div>
           {/* <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{item.title}</h4>
            <p className="text-foreground/60 text-sm line-clamp-1">{item.description}</p> */}

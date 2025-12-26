@@ -21,3 +21,23 @@ export interface Item {
   rank: number
   createdAt?: Date
 }
+
+export interface SocialLink {
+  id: string
+  name: string
+  url: string
+  iconUrl?: string
+  order?: number
+  createdAt?: Date
+}
+
+export interface SocialPost {
+  id: string
+  title?: string
+  description?: string
+  link: string
+  imageUrl?: string
+  platform?: string // youtube, instagram, etc.
+  order?: number
+  createdAt?: Date
+}

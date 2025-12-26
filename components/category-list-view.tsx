@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
@@ -35,6 +35,8 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
   const [draggedType, setDraggedType] = useState<string | null>(null)
   const [dragDirection, setDragDirection] = useState<"up" | "down" | null>(null)
   const [autoScrollMap, setAutoScrollMap] = useState<Record<string, "up" | "down" | null>>({})
+  const [dragOverType, setDragOverType] = useState<string | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const category = categories.find((c) => c.id === categoryId)
   const useTypes = category?.useTypes !== false // Default to true
@@ -96,11 +98,21 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
     setDraggedId(itemId)
     setDraggedType(type || null)
     setDragDirection(null)
+    setDragOverType(null)
+    setDragOverIndex(null)
   }
 
-  const handleDragOver = (e: React.DragEvent, targetId?: string) => {
+  const handleDragOver = (e: React.DragEvent, targetId?: string, type?: string, index?: number) => {
     if (!isAdmin || !draggedId) return
     e.preventDefault()
+    e.stopPropagation()
+
+    if (type !== undefined) {
+      setDragOverType(type)
+      if (index !== undefined) {
+        setDragOverIndex(index)
+      }
+    }
 
     if (targetId) {
       // Determine drag direction
@@ -120,7 +132,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
     }
   }
 
-  const handleDrop = async (targetId: string, type?: string) => {
+  const handleDrop = async (targetId: string | null, type?: string, dropIndex?: number) => {
     if (!isAdmin || !draggedId) return
 
     try {
@@ -134,12 +146,28 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
         const targetItems = targetType ? (itemsByType?.[targetType] || []) : items.filter(i => !i.type).sort((a, b) => a.rank - b.rank)
 
         const draggedIndex = sourceItems.findIndex((i) => i.id === draggedId)
-        const targetIndex = targetId ? targetItems.findIndex((i) => i.id === targetId) : targetItems.length
-        if (draggedIndex === -1 || targetIndex === -1) return
+        
+        let targetIndex: number
+        if (targetId) {
+          targetIndex = targetItems.findIndex((i) => i.id === targetId)
+          if (targetIndex === -1) targetIndex = targetItems.length
+        } else if (dropIndex !== undefined) {
+          targetIndex = dropIndex
+        } else {
+          targetIndex = targetItems.length
+        }
+
+        if (draggedIndex === -1) return
 
         const newSource = [...sourceItems]
         const [draggedItem] = newSource.splice(draggedIndex, 1)
         const newTarget = [...targetItems]
+        
+        // If dragging within same type, adjust target index
+        if (sourceType === targetType && draggedIndex < targetIndex) {
+          targetIndex -= 1
+        }
+        
         newTarget.splice(targetIndex, 0, draggedItem)
 
         const sourceUpdates = newSource.map((item, index) => ({ ...item, rank: index + 1 }))
@@ -154,11 +182,23 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
       } else {
         // Reorder in normal list
         const draggedIndex = filteredItems.findIndex((i) => i.id === draggedId)
-        const targetIndex = filteredItems.findIndex((i) => i.id === targetId)
-        if (draggedIndex === -1 || targetIndex === -1) return
+        let targetIndex: number
+        if (targetId) {
+          targetIndex = filteredItems.findIndex((i) => i.id === targetId)
+          if (targetIndex === -1) targetIndex = filteredItems.length
+        } else {
+          targetIndex = filteredItems.length
+        }
+        if (draggedIndex === -1) return
 
         const newItems = [...filteredItems]
         const [draggedItem] = newItems.splice(draggedIndex, 1)
+        
+        // Adjust target index if dragging within same list
+        if (draggedIndex < targetIndex) {
+          targetIndex -= 1
+        }
+        
         newItems.splice(targetIndex, 0, draggedItem)
         itemsToReorder = newItems.map((item, index) => ({
           ...item,
@@ -169,11 +209,23 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
       await updateRanks(itemsToReorder)
       setDraggedId(null)
       setDraggedType(null)
+      setDragOverType(null)
+      setDragOverIndex(null)
     } catch (error) {
       console.error("Error updating ranks:", error)
       setDraggedId(null)
       setDraggedType(null)
+      setDragOverType(null)
+      setDragOverIndex(null)
     }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    setDraggedType(null)
+    setDragDirection(null)
+    setDragOverType(null)
+    setDragOverIndex(null)
   }
 
   const handleTypeDoubleClick = (type: string) => {
@@ -318,10 +370,7 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                 draggable={isAdmin}
                 onDragStart={() => handleDragStart(item.id)}
                 onDragOver={(e) => handleDragOver(e, item.id)}
-                onDragEnd={() => {
-                  setDraggedId(null)
-                  setDragDirection(null)
-                }}
+                onDragEnd={handleDragEnd}
                 onDrop={(e) => {
                   e.preventDefault()
                   handleDrop(item.id)
@@ -557,42 +606,80 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
 
                     {/* Items Column - Vertical Scroll */}
                     <div
-                      className={`space-y-3 max-h-[1000px] overflow-y-auto scrollbar-hide ${autoScrollMap[type] === 'up' ? 'auto-scroll-up' : autoScrollMap[type] === 'down' ? 'auto-scroll-down' : ''}`}
-
+                      className={`space-y-3 max-h-[1000px] overflow-y-auto scrollbar-hide relative ${autoScrollMap[type] === 'up' ? 'auto-scroll-up' : autoScrollMap[type] === 'down' ? 'auto-scroll-down' : ''}`}
+                      onDragOver={(e) => {
+                        if (!isAdmin || !draggedId) return
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setDragOverType(type)
+                      }}
+                      onDrop={(e) => {
+                        if (!isAdmin || !draggedId) return
+                        e.preventDefault()
+                        e.stopPropagation()
+                        // Drop at end of list
+                        handleDrop(null, type, typeItems.length)
+                      }}
                     >
+                      {/* Drop zone at the start */}
+                      {isAdmin && draggedId && dragOverType === type && dragOverIndex === 0 && (
+                        <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
+                      )}
 
                       {typeItems.map((item, index) => (
-                        <div
-                          key={item.id}
-                          draggable={isAdmin}
-                          onDragStart={() => handleDragStart(item.id, type)}
-                          onDragOver={(e) => handleDragOver(e, item.id)}
-                          onDragEnd={() => {
-                            setDraggedId(null)
-                            setDragDirection(null)
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault()
-                            handleDrop(item.id, type)
-                          }}
-                          onMouseDown={(e) => {
-                            if (!isAdmin || (e.target as HTMLElement).closest('button')) {
+                        <React.Fragment key={item.id}>
+                          {/* Drop zone before item */}
+                          {isAdmin && draggedId && dragOverType === type && dragOverIndex === index && draggedId !== item.id && (
+                            <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
+                          )}
+                          <div
+                            draggable={isAdmin}
+                            onDragStart={(e) => {
+                              if (!isAdmin) return
+                              handleDragStart(item.id, type)
+                              e.dataTransfer.effectAllowed = "move"
+                            }}
+                            onDragOver={(e) => {
+                              if (!isAdmin || !draggedId) return
                               e.preventDefault()
-                            }
-                          }}
-                          onClick={(e) => {
-                            // Only navigate if not dragging and not clicking on buttons
-                            if (!draggedId && !(e.target as HTMLElement).closest('button')) {
-                              router.push(`/item/${item.id}`)
-                            }
-                          }}
-                          className={`group glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-50 scale-95 rotate-2 z-50 cursor-grabbing" : isAdmin ? "cursor-grab" : "cursor-pointer"
-                            } ${draggedId && draggedId !== item.id ? "hover:scale-105" : ""}`}
-                          style={{
-                            width: "100%",
-                            minHeight: "120px",
-                          }}
-                        >
+                              e.stopPropagation()
+                              handleDragOver(e, item.id, type, index)
+                              
+                              // Calculate if we're in the upper or lower half
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const y = e.clientY - rect.top
+                              const midPoint = rect.height / 2
+                              setDragOverIndex(y < midPoint ? index : index + 1)
+                            }}
+                            onDragEnd={handleDragEnd}
+                            onDrop={(e) => {
+                              if (!isAdmin || !draggedId) return
+                              e.preventDefault()
+                              e.stopPropagation()
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const y = e.clientY - rect.top
+                              const midPoint = rect.height / 2
+                              const dropIndex = y < midPoint ? index : index + 1
+                              handleDrop(item.id, type, dropIndex)
+                            }}
+                            onMouseDown={(e) => {
+                              if (!isAdmin || (e.target as HTMLElement).closest('button')) {
+                                e.preventDefault()
+                              }
+                            }}
+                            onClick={(e) => {
+                              // Only navigate if not dragging and not clicking on buttons
+                              if (!draggedId && !(e.target as HTMLElement).closest('button')) {
+                                router.push(`/item/${item.id}`)
+                              }
+                            }}
+                            className={`group glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-30 scale-90 rotate-2 z-50 cursor-grabbing" : isAdmin ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+                              } ${draggedId && draggedId !== item.id && dragOverType === type && (dragOverIndex === index || dragOverIndex === index + 1) ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                            style={{
+                              width: "100%",
+                              minHeight: "120px",
+                            }}
+                          >
                           <div className="p-3 space-y-2">
                             {/* Drag direction indicator */}
                             {isAdmin && draggedId === item.id && dragDirection && (
@@ -662,7 +749,12 @@ export default function CategoryListView({ categoryId, onBack }: CategoryListVie
                             )}
                           </div>
                         </div>
+                        </React.Fragment>
                       ))}
+                      {/* Drop zone at the end */}
+                      {isAdmin && draggedId && dragOverType === type && dragOverIndex === typeItems.length && (
+                        <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
+                      )}
                     </div>
                   </div>
                 )

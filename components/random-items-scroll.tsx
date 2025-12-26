@@ -47,7 +47,8 @@ export default function RandomItemsScroll() {
 
   return (
     <div className="mt-16 " style={{ marginBottom: "-100px" }} >
-      <div className="relative overflow-hidden py-8 z-0 hover:z-10">
+      {/* First row - without images */}
+      {/* <div className="relative overflow-hidden py-8 z-0 hover:z-10">
         <div
           className="flex gap-4 animate-scroll-right hover:z-10"
           style={{ width: "max-content" }}
@@ -55,26 +56,15 @@ export default function RandomItemsScroll() {
           {[...randomItems, ...randomItems.slice(0, Math.max(0, randomItems.length - 1))].map((item, index) => (
             <div
               key={`${item.id}-${index}`}
-              onClick={() => router.push(`/item/${item.id}`)}
-              className="flex-shrink-0 w-32 h-48 glass-strong rounded-lg overflow-hidden cursor-pointer opacity-20 hover:opacity-100 hover:z-10 animate-pulse duration-500 ease-in-out group group-hover:opacity-100 transition-all duration-100 ease-in-out  hover:scale-90 transition-transform"
-            >
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title ?? ""}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                  <span className="text-2xl">📌</span>
-                </div>
-              )}
+              className="flex-shrink-0 w-32 h-48 glass-strong rounded-lg overflow-hidden opacity-20"
+            > 
             </div>
           ))}
         </div>
       </div>
-      <br /> 
-      <div className="relative overflow-hidden z-0 hover:z-10 " style={{ top: "-52px" }}>
+      <br />  */}
+      {/* Second row - with images */}
+      <div className="relative overflow-hidden z-0 hover:z-10  " style={{ paddingBottom: "100px" }}>
         <div
           className="flex gap-4 animate-scroll-left hover:z-10"
           style={{ width: "max-content" }}
