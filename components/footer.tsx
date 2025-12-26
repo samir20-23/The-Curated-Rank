@@ -187,27 +187,7 @@ export default function Footer() {
                 </a>
                 {isAdmin && (
                   <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {/* <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEditLink(link)
-                      }}
-                      className="p-1 glass text-primary hover:bg-primary/20 rounded text-xs"
-                      title="Edit"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteLink(link.id)
-                      }}
-                      className="p-1 glass text-red-400 hover:bg-red-500/20 rounded text-xs"
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
-                     */}
+                     
                     <button
                       onClick={(e) => {
                         e.stopPropagation()

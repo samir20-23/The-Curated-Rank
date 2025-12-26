@@ -42,7 +42,7 @@ interface TMDBData {
 export default function ItemDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const itemId = params.id as string
+  const itemId = (params?.id as string) || ""
 
   const { categories } = useFirebaseCategories()
   const [item, setItem] = useState<Item | null>(null)
@@ -212,7 +212,7 @@ export default function ItemDetailPage() {
     (omdbData?.Poster && omdbData.Poster !== "N/A" ? omdbData.Poster : (tmdbData?.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}` : null))
 
   const plot = item?.description || omdbData?.Plot || tmdbData?.overview || "No description available"
-  const displayTitle = item?.title || item?.name || "Untitled"
+  const displayTitle = item?.title || "Untitled"
   const director = omdbData?.Director || "N/A"
   const actors = omdbData?.Actors || "N/A"
   const genre = omdbData?.Genre || "N/A"
@@ -220,8 +220,34 @@ export default function ItemDetailPage() {
   const year = omdbData?.Year || (tmdbData?.release_date ? tmdbData.release_date.split("-")[0] : "N/A")
   const isMovieCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("movie")
 
-  // Watch on Moviebox helper
+  // Watch server helpers
   const movieboxUrlFor = (title: string) => `https://moviebox.ph/web/searchResult?keyword=${encodeURIComponent(title)}`
+  
+  // Convert title to slug format (lowercase, replace spaces with hyphens)
+  const titleToSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+  }
+  
+  // Server URL helpers
+  const getServerUrls = (title: string) => {
+    const slug = titleToSlug(title)
+    const encoded = encodeURIComponent(title)
+    const plusSeparated = title.replace(/\s+/g, '+')
+    
+    return {
+      moviebox: movieboxUrlFor(title),
+      moviesjoytv: `https://moviesjoytv.to/search/${slug}`,
+      sflix: `https://sflix.ps/search/${slug}`,
+      flixer: `https://flixer.sh/search?q=${encoded}`,
+      egydead: `https://egydead.media/?s=${plusSeparated}`
+    }
+  }
+  
+  // Check if item has valid title/description for watch buttons
+  const hasValidTitle = item?.title && item.title.trim() !== "" && displayTitle !== "Untitled"
 
   return (
     <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative">
@@ -280,18 +306,56 @@ export default function ItemDetailPage() {
                       <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rank: #{item.rank}</span>
                       {rating !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rating: {rating}</span>}
                       {year !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Year: {year}</span>}
-                      {/* Watch on Moviebox button only for movie categories and when title exists */}
-                      {isMovieCategory && item.title && (
-                        <a
-                          href={movieboxUrlFor(item.title)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                        >
-                          Watch on MovieBox
-                        </a>
-                      )}
                     </div>
+                    
+                    {/* Watch server buttons - only for movie categories and when title exists */}
+                    {isMovieCategory && hasValidTitle && (() => {
+                      const serverUrls = getServerUrls(item.title!)
+                      return (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <a
+                            href={serverUrls.moviebox}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition transform"
+                          >
+                            Watch on MovieBox
+                          </a>
+                          <a
+                            href={serverUrls.moviesjoytv}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-blue-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
+                          >
+                            MoviesJoy
+                          </a>
+                          <a
+                            href={serverUrls.sflix}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-purple-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
+                          >
+                            SFlix
+                          </a>
+                          <a
+                            href={serverUrls.flixer}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-green-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
+                          >
+                            Flixer
+                          </a>
+                          <a
+                            href={serverUrls.egydead}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-orange-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
+                          >
+                            EgyDead
+                          </a>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   <div>
@@ -352,10 +416,13 @@ export default function ItemDetailPage() {
                 <h2 className="text-2xl font-bold text-foreground">You might also like</h2>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "160px" }}>
                   <div className="flex flex-wrap gap-4" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    {similarMovies.map((movie: any, idx: number) => {
+                      {similarMovies.map((movie: any, idx: number) => {
                       const title = movie.title || movie.name || "Untitled"
                       const posterPath = movie.poster_path ? `https://image.tmdb.org/t/p/w300${movie.poster_path}` : null
                       const overview = movie.overview || ""
+                      const movieHasTitle = title && title !== "Untitled"
+                      const movieUrls = movieHasTitle ? getServerUrls(title) : null
+                      
                       return (
                         <div key={`${movie.id || idx}-${idx}`} className="flex-shrink-0 w-44 sm:w-48 md:w-56 lg:w-64 glass-strong rounded-lg overflow-hidden group">
                           <div className="relative">
@@ -367,16 +434,54 @@ export default function ItemDetailPage() {
                                 <span className="text-3xl">🎬</span>
                               </div>
                             )}
-                            {isMovieCategory && (
-                              <a
-                                href={movieboxUrlFor(title)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="absolute bottom-3 left-3 right-3 px-2 py-1 bg-primary/90 text-primary-foreground rounded-md text-xs font-medium text-center"
-                              >
-                                Watch
-                              </a>
+                            {isMovieCategory && movieHasTitle && movieUrls && (
+                              <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-1">
+                                <a
+                                  href={movieUrls.moviebox}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 px-2 py-1 bg-primary/90 text-primary-foreground rounded-md text-xs font-medium text-center hover:bg-primary transition"
+                                >
+                                  MovieBox
+                                </a>
+                                <a
+                                  href={movieUrls.moviesjoytv}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 px-2 py-1 bg-blue-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-blue-500 transition"
+                                >
+                                  MoviesJoy
+                                </a>
+                                <a
+                                  href={movieUrls.sflix}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 px-2 py-1 bg-purple-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-purple-500 transition"
+                                >
+                                  SFlix
+                                </a>
+                                <a
+                                  href={movieUrls.flixer}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 px-2 py-1 bg-green-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-green-500 transition"
+                                >
+                                  Flixer
+                                </a>
+                                <a
+                                  href={movieUrls.egydead}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 px-2 py-1 bg-orange-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-orange-500 transition"
+                                >
+                                  EgyDead
+                                </a>
+                              </div>
                             )}
                           </div>
 

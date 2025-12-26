@@ -51,29 +51,27 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
   const category = categories.find((c) => c.id === categoryId)
   const useTypes = category?.useTypes !== false
-  const availableTypes = useTypes
-    ? category?.tags || (category?.type ? category.type.split(", ").map((t) => t.trim()) : [])
-    : []
+  const availableTypes = useTypes ? (category?.tags || (category?.type ? category.type.split(", ").map(t => t.trim()) : [])) : []
 
   const getServerItemsForType = (type?: string) => {
     if (!type) {
-      return items.filter((i) => !i.type).sort((a, b) => a.rank - b.rank)
+      return items.filter(i => !i.type).sort((a, b) => a.rank - b.rank)
     }
-    return items.filter((i) => i.type === type).sort((a, b) => a.rank - b.rank)
+    return items.filter(i => i.type === type).sort((a, b) => a.rank - b.rank)
   }
 
   const getServerAll = () => items.slice().sort((a, b) => a.rank - b.rank)
 
   const mergeServerAndTempsForType = (type?: string) => {
     const server = getServerItemsForType(type)
-    const temps = tempItems.filter((t) => (t.type || "") === (type || ""))
+    const temps = tempItems.filter(t => (t.type || "") === (type || ""))
     const result: Item[] = []
     for (let i = 0; i < server.length; i++) {
-      const before = temps.filter((tt) => (tt.insertPosition ?? server.length) === i)
+      const before = temps.filter(tt => (tt.insertPosition ?? server.length) === i)
       result.push(...before)
       result.push(server[i])
     }
-    const endTemps = temps.filter((tt) => (tt.insertPosition ?? server.length) >= server.length)
+    const endTemps = temps.filter(tt => (tt.insertPosition ?? server.length) >= server.length)
     result.push(...endTemps)
     return result
   }
@@ -81,7 +79,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
   useEffect(() => {
     if (!availableTypes || availableTypes.length === 0) return
     const map: Record<string, "up" | "down" | null> = {}
-    availableTypes.forEach((type) => {
+    availableTypes.forEach(type => {
       const r = Math.random()
       if (r > 0.88) map[type] = "up"
       else if (r > 0.76) map[type] = "down"
@@ -135,13 +133,9 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       const img = new Image()
       img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
       img.onload = () => {
-        try {
-          e.dataTransfer.setDragImage(img, 0, 0)
-        } catch { }
+        try { e.dataTransfer.setDragImage(img, 0, 0) } catch { }
       }
-      try {
-        e.dataTransfer.setDragImage(img, 0, 0)
-      } catch { }
+      try { e.dataTransfer.setDragImage(img, 0, 0) } catch { }
       e.dataTransfer.effectAllowed = "move"
     }
   }
@@ -172,17 +166,14 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     const isTemp = draggedId.startsWith("dup-")
     try {
       if (isTemp) {
-        setTempItems((prev) => {
-          const tmp = prev.find((p) => p.id === draggedId)
+        setTempItems(prev => {
+          const tmp = prev.find(p => p.id === draggedId)
           if (!tmp) return prev
-          const newPrev = prev.filter((p) => p.id !== draggedId)
+          const newPrev = prev.filter(p => p.id !== draggedId)
           const targetType = type || undefined
           const serverList = getServerItemsForType(targetType)
-          const existingTemps = newPrev.filter((x) => (x.type || "") === (targetType || ""))
-          const insertPos =
-            typeof dropIndex === "number"
-              ? Math.max(0, Math.min(dropIndex, serverList.length + existingTemps.length))
-              : serverList.length
+          const existingTemps = newPrev.filter(x => (x.type || "") === (targetType || ""))
+          const insertPos = (typeof dropIndex === "number") ? Math.max(0, Math.min(dropIndex, serverList.length + existingTemps.length)) : serverList.length
           const moved: TempItem = { ...tmp, type: targetType, insertPosition: insertPos }
           return [...newPrev, moved]
         })
@@ -197,15 +188,12 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         const sourceServer = getServerItemsForType(sourceType)
         const targetServer = getServerItemsForType(targetType)
         const mergedTarget = mergeServerAndTempsForType(targetType)
-        const sourceIndex = sourceServer.findIndex((i) => i.id === draggedId)
-        if (sourceIndex === -1) {
-          resetDragState()
-          return
-        }
+        const sourceIndex = sourceServer.findIndex(i => i.id === draggedId)
+        if (sourceIndex === -1) { resetDragState(); return }
         let serverTargetIndex: number
         if (typeof dropIndex === "number") serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
         else if (targetId) {
-          const visualIdx = mergedTarget.findIndex((i) => i.id === targetId)
+          const visualIdx = mergedTarget.findIndex(i => i.id === targetId)
           const vi = visualIdx === -1 ? mergedTarget.length : visualIdx
           serverTargetIndex = visualIndexToServerIndex(mergedTarget, vi)
         } else serverTargetIndex = targetServer.length
@@ -221,15 +209,12 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       } else {
         const serverAll = getServerAll()
         const mergedAll = mergeServerAndTempsForType(undefined)
-        const sourceIndex = serverAll.findIndex((i) => i.id === draggedId)
-        if (sourceIndex === -1) {
-          resetDragState()
-          return
-        }
+        const sourceIndex = serverAll.findIndex(i => i.id === draggedId)
+        if (sourceIndex === -1) { resetDragState(); return }
         let serverTargetIndex: number
         if (typeof dropIndex === "number") serverTargetIndex = visualIndexToServerIndex(mergedAll, dropIndex)
         else if (targetId) {
-          const visualIdx = mergedAll.findIndex((i) => i.id === targetId)
+          const visualIdx = mergedAll.findIndex(i => i.id === targetId)
           const vi = visualIdx === -1 ? mergedAll.length : visualIdx
           serverTargetIndex = visualIndexToServerIndex(mergedAll, vi)
         } else serverTargetIndex = serverAll.length
@@ -274,12 +259,12 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       }
     }
     if (newType && newType !== oldType) {
-      const updatedTags = availableTypes.map((t) => (t === oldType ? newType : t))
+      const updatedTags = availableTypes.map(t => t === oldType ? newType : t)
       await updateCategory(categoryId, {
         tags: updatedTags,
         type: updatedTags.join(", "),
       })
-      const itemsToUpdate = items.filter((item) => item.type === oldType)
+      const itemsToUpdate = items.filter(item => item.type === oldType)
       for (const item of itemsToUpdate) {
         await updateItem(item.id, { type: newType })
       }
@@ -290,10 +275,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
   const handleTypeKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleTypeSave()
-    else if (e.key === "Escape") {
-      setEditingType(null)
-      setEditingTypeValue("")
-    }
+    else if (e.key === "Escape") { setEditingType(null); setEditingTypeValue("") }
   }
 
   const handleDeleteItem = async () => {
@@ -324,7 +306,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       type: item.type,
       insertPosition: serverList.length,
     }
-    setTempItems((prev) => [...prev, tmp])
+    setTempItems(prev => [...prev, tmp])
     setIsDuplicating(true)
     setDraggedId(tmpId)
     setDraggedType(item.type || null)
@@ -335,17 +317,43 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     }, 50)
   }
 
+  const renderActionButtons = (item: Item) => {
+    return (
+      <div className="flex gap-2 z-10">
+        {isAdmin && (
+          <>
+            <button style={{ cursor: "pointer" }}
+              onClick={(e) => { e.stopPropagation(); setEditingItem(item) }}
+              className="px-3 py-1 glass text-foreground hover:bg-secondary/30 rounded text-sm font-medium transition duration-300"
+            >
+              {t("admin.edit")}
+            </button>
+
+            <button style={{ cursor: "pointer" }}
+              onClick={(e) => { e.stopPropagation(); handleDeleteClick(item) }}
+              className="px-3 py-1 glass text-red-400 hover:bg-red-500/20 rounded text-sm font-medium transition duration-300"
+            >
+              {t("admin.delete")}
+            </button>
+
+            <button style={{ cursor: "pointer" }}
+              onClick={(e) => { e.stopPropagation(); handleDuplicateClick(item) }}
+              className="px-3 py-1 glass text-foreground hover:bg-secondary/30 rounded text-sm font-medium transition duration-300"
+            >
+              Duplicate
+            </button>
+          </>
+        )}
+      </div>
+    )
+  }
+
   const mergedNoType = mergeServerAndTempsForType(undefined)
   const filteredItems = mergedNoType.filter((item) => {
-    const matchesText =
-      !filterText ||
-      (item.title || "").toLowerCase().includes(filterText.toLowerCase()) ||
+    const matchesText = !filterText || (item.title || "").toLowerCase().includes(filterText.toLowerCase()) ||
       (item.description || "").toLowerCase().includes(filterText.toLowerCase())
     const matchesType = !filterType || item.type === filterType
-    const matchesRank =
-      !filterRank ||
-      (item.rank !== undefined && item.rank.toString() === filterRank) ||
-      (item.rank !== undefined && item.rank.toString().includes(filterRank))
+    const matchesRank = !filterRank || (item.rank !== undefined && item.rank.toString() === filterRank) || (item.rank !== undefined && item.rank.toString().includes(filterRank))
     return matchesText && matchesType && matchesRank
   })
 
@@ -378,7 +386,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
   const onColumnMouseEnter = (type: string) => {
     clearAutoInterval(type)
-    setAutoScrollMap((prev) => ({ ...prev, [type]: null }))
+    setAutoScrollMap(prev => ({ ...prev, [type]: null }))
     const container = columnsRef.current[type]
     if (container) container.scrollTop = 0
   }
@@ -398,18 +406,37 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
         style={{
           width: "100%",
           minHeight: `${itemMinHeight}px`,
-          opacity: isDuplicating && !isTemp ? 0.5 : 1,
-          userSelect: "none",
-          WebkitUserSelect: "none",
+          opacity: isDuplicating && !isTemp ? 0.5 : 1
         }}
         onDragStart={(e) => {
           if (!isAdmin) return
           handleDragStart(item.id, type, e)
-          try {
-            e.dataTransfer.effectAllowed = "move"
-          } catch { }
+          try { e.dataTransfer.effectAllowed = "move" } catch { }
+        }}
+        onDragOver={(e) => {
+          if (!isAdmin || !draggedId) return
+          e.preventDefault()
+          e.stopPropagation()
+          const container = e.currentTarget.parentElement as Element
+          if (container) {
+            const calculatedIndex = computeIndexFromContainer(container, e.clientY)
+            setDragOverType(type || null)
+            setDragOverIndex(calculatedIndex)
+          }
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+          const y = e.clientY - rect.top
+          const midPoint = rect.height / 2
+          setDragDirection(y < midPoint ? "up" : "down")
         }}
         onDragEnd={handleDragEnd}
+        onDrop={(e) => {
+          if (!isAdmin || !draggedId) return
+          e.preventDefault()
+          e.stopPropagation()
+          const container = e.currentTarget.parentElement as Element
+          const dropIdx = container ? computeIndexFromContainer(container, e.clientY) : undefined
+          handleDrop(item.id, type, dropIdx)
+        }}
         onMouseDown={(e) => {
           if (!isAdmin || (e.target as HTMLElement).closest("button")) {
             e.preventDefault()
@@ -423,41 +450,27 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       >
         <div className="p-3 space-y-2">
           {isAdmin && draggedId === item.id && dragDirection && (
-            <div
-              className={`absolute top-2 right-2 text-2xl animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}
-            >
+            <div className={`absolute top-2 right-2 text-2xl animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}>
               {dragDirection === "up" ? "⬆️" : "⬇️"}
             </div>
           )}
 
           {isAdmin && (
-            <div className="flex justify-end gap-2 relative z-20">
-              <button
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setEditingItem(item)
-                }}
+            <div className="flex justify-end gap-2">
+              <button style={{ cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); setEditingItem(item) }}
                 className="p-1 glass text-primary hover:bg-primary/20 rounded text-xs"
               >
                 {t("admin.edit")}
               </button>
-              <button
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteClick(item)
-                }}
+              <button style={{ cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); handleDeleteClick(item) }}
                 className="p-1 glass text-red-400 hover:bg-red-500/20 rounded text-xs"
               >
                 {t("admin.delete")}
               </button>
-              <button
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDuplicateClick(item)
-                }}
+              <button style={{ cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); handleDuplicateClick(item) }}
                 className="p-1 glass text-foreground hover:bg-secondary/20 rounded text-xs"
               >
                 Duplicate
@@ -471,36 +484,25 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             </span>
           </div>
 
-          <div
-            className="w-full overflow-hidden rounded pointer-events-none"
-            onClick={(e) => {
-              if (!draggedId && !(e.target as HTMLElement).closest("button")) {
-                router.push(`/item/${item.id}`)
-              }
-            }}
-          >
+          <div className="w-full overflow-hidden rounded" onClick={(e) => {
+            if (!draggedId && !(e.target as HTMLElement).closest('button')) {
+              router.push(`/item/${item.id}`)
+            }
+          }}>
             {item.imageUrl ? (
-              <img
-                src={item.imageUrl || "/placeholder.svg"}
-                alt={item.title || `Item ${item.rank}`}
-                className="w-full object-cover"
-                draggable={false}
-              />
+              <img src={item.imageUrl || "/placeholder.svg"} alt={item.title || `Item ${item.rank}`} className="w-full object-cover" />
             ) : (
-              <div
-                className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center"
-                style={{ minHeight: `${itemMinHeight / 2}px` }}
-              >
+              <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center" style={{ minHeight: `${itemMinHeight / 2}px` }}>
                 <span className="text-2xl">📌</span>
               </div>
             )}
           </div>
 
-          <h4 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors pointer-events-none">
+          <h4 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">
             {item.title || `Item ${item.rank}`}
           </h4>
           {item.description && (
-            <p className="text-foreground/60 text-xs line-clamp-2 overflow-hidden pointer-events-none">
+            <p className="text-foreground/60 text-xs line-clamp-2 overflow-hidden">
               {item.description}
             </p>
           )}
@@ -509,27 +511,14 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     )
   }
 
-  if (
-    !useTypes ||
-    availableTypes.length === 0 ||
-    availableTypes.length === 1 ||
-    Object.keys(itemsByTypeCalculated()).length <= 1
-  ) {
+  if (!useTypes || availableTypes.length === 0 || availableTypes.length === 1 || Object.keys(itemsByTypeCalculated()).length <= 1) {
     return (
       <div className="space-y-8">
-        {isDuplicating && (
-          <div
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }}
-          />
-        )}
+        {isDuplicating && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }} />}
 
         <div className="flex items-center justify-between " style={{ padding: "20px 40px 0px 40px" }}>
           <div className="flex items-center gap-1">
-            <button
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push("/")}
-              className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors"
-            >
+            <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -539,8 +528,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             </div>
           </div>
           {isAdmin && (
-            <button
-              style={{ cursor: "pointer" }}
+            <button style={{ cursor: "pointer" }}
               onClick={() => setIsCreateItemOpen(true)}
               className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
             >
@@ -549,7 +537,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           )}
         </div>
 
-        <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }}>
+        <div className="glass-strong rounded-xl p-4 space-y-3" style={{ margin: "10px 40px 12px 40px" }} >
           <div className="flex gap-2 flex-wrap">
             <input
               type="text"
@@ -588,51 +576,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           </div>
         ) : (
           <div className="space-y-2">
-            <div
-              onDragOver={(e) => {
-                if (!isAdmin || !draggedId) return
-                e.preventDefault()
-                e.stopPropagation()
-              }}
-            >
-              {filteredItems.map((item, idx) => (
-                <React.Fragment key={item.id}>
-                  {isAdmin &&
-                    draggedId &&
-                    dragOverType === undefined &&
-                    dragOverIndex === idx &&
-                    draggedId !== item.id && (
-                      <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all my-1" />
-                    )}
-                  <div
-                    data-id={item.id}
-                    onDragOver={(e) => {
-                      if (!isAdmin || !draggedId) return
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setDragOverType(undefined)
-                      const container = e.currentTarget.parentElement as Element
-                      if (container) {
-                        const calculatedIndex = computeIndexFromContainer(container, e.clientY)
-                        setDragOverIndex(calculatedIndex)
-                      }
-                    }}
-                    onDrop={(e) => {
-                      if (!isAdmin || !draggedId) return
-                      e.preventDefault()
-                      e.stopPropagation()
-                      const finalIndex = dragOverIndex !== null ? dragOverIndex : filteredItems.length
-                      handleDrop(null, undefined, finalIndex)
-                    }}
-                  >
-                    {renderItemCard(item)}
-                  </div>
-                </React.Fragment>
-              ))}
-              {isAdmin && draggedId && dragOverType === undefined && dragOverIndex === filteredItems.length && (
-                <div className="h-8 bg-primary/30 rounded-lg border-4 border-dashed border-primary transition-all" />
-              )}
-            </div>
+            {filteredItems.map((item) => renderItemCard(item))}
           </div>
         )}
 
@@ -684,19 +628,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
   return (
     <div className="space-y-8">
-      {isDuplicating && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }}
-        />
-      )}
+      {isDuplicating && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }} />}
 
       <div className="flex items-center justify-between mb-8" style={{ padding: "20px 40px 0px 40px" }}>
         <div className="flex items-center gap-1">
-          <button
-            style={{ cursor: "pointer" }}
-            onClick={() => router.push("/")}
-            className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors"
-          >
+          <button style={{ cursor: "pointer" }} onClick={() => router.push("/")} className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -706,8 +642,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           </div>
         </div>
         {isAdmin && (
-          <button
-            style={{ cursor: "pointer" }}
+          <button style={{ cursor: "pointer" }}
             onClick={() => setIsCreateItemOpen(true)}
             className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
           >
@@ -752,131 +687,104 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           <p className="text-foreground/60">{t("common.loading")}</p>
         </div>
       ) : (
-        <div
-          className={`${isSingleType ? "" : "overflow-x-auto"} pb-4`}
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            width: "100%",
-            paddingLeft: "20px",
-            border: "1px solid rgba(161, 161, 161, 0.41)",
-            boxShadow: "rgba(206, 177, 199, 0.71) 0px 0px 100px -68px inset",
-          }}
-        >
-          <div
-            className={`flex gap-6 ${isSingleType ? "justify-center" : ""}`}
-            style={{ minWidth: isSingleType ? "auto" : "max-content" }}
-          >
-            {typeColumns
-              .filter((type) => !filterType || type === filterType)
-              .map((type) => {
-                const merged = mergeServerAndTempsForType(type)
-                if (merged.length === 0 && (filterText || filterRank || filterType)) return null
+        <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4`} style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          width: "100%",
+          paddingLeft: "20px",
+          border: "1px solid rgba(161, 161, 161, 0.41)",
+          boxShadow: "rgba(206, 177, 199, 0.71) 0px 0px 100px -68px inset"
+        }}>
+          <div className={`flex gap-6 ${isSingleType ? "justify-center" : ""}`} style={{ minWidth: isSingleType ? "auto" : "max-content" }}>
+            {typeColumns.filter(type => !filterType || type === filterType).map(type => {
+              const merged = mergeServerAndTempsForType(type)
+              if (merged.length === 0 && (filterText || filterRank || filterType)) return null
 
-                return (
-                  <div
-                    key={type}
-                    className={`${isSingleType ? "w-full max-w-4xl" : "flex-shrink-0 w-64"} space-y-4`}
-                    style={{ minWidth: isSingleType ? "auto" : "256px" }}
-                  >
-                    <div className="glass-strong rounded-lg p-4 sticky top-0 z-10">
-                      {editingType === type ? (
-                        <input
-                          type="text"
-                          value={editingTypeValue}
-                          onChange={(e) => setEditingTypeValue(e.target.value)}
-                          onBlur={handleTypeSave}
-                          onKeyDown={handleTypeKeyDown}
-                          className="text-xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-2"
-                          autoFocus
-                        />
-                      ) : (
-                        <h3
-                          className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
-                          onDoubleClick={() => handleTypeDoubleClick(type)}
-                          title={isAdmin ? "Double-click to edit" : ""}
-                        >
-                          {type}
-                        </h3>
-                      )}
-                      <span className="text-foreground/60 text-sm">({merged.length} items)</span>
-                    </div>
-
-                    <div
-                      ref={(el) => (columnsRef.current[type] = el)}
-                      className={`space-y-3 max-h-[2000px] overflow-y-auto relative ${isDragging ? "overflow-y-scroll" : ""}`}
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                        maxHeight: undefined,
-                        WebkitOverflowScrolling: "touch",
-                      }}
-                      onMouseEnter={() => onColumnMouseEnter(type)}
-                      onMouseLeave={() => onColumnMouseLeave(type)}
-                      onDragOver={(e) => {
-                        if (!isAdmin || !draggedId) return
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setDragOverType(type)
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const scrollThreshold = 80
-                        const scrollSpeed = 12
-                        if (e.clientY - rect.top < scrollThreshold) {
-                          ; (e.currentTarget as HTMLElement).scrollTop = Math.max(
-                            0,
-                            (e.currentTarget as HTMLElement).scrollTop - scrollSpeed,
-                          )
-                        } else if (rect.bottom - e.clientY < scrollThreshold) {
-                          ; (e.currentTarget as HTMLElement).scrollTop = Math.min(
-                            (e.currentTarget as HTMLElement).scrollHeight -
-                            (e.currentTarget as HTMLElement).clientHeight,
-                            (e.currentTarget as HTMLElement).scrollTop + scrollSpeed,
-                          )
-                        }
-                        const foundIndex = computeIndexFromContainer(e.currentTarget, e.clientY)
-                        setDragOverIndex(foundIndex)
-                      }}
-                      onDrop={(e) => {
-                        if (!isAdmin || !draggedId || dragOverType !== type) return
-                        e.preventDefault()
-                        e.stopPropagation()
-                        const finalIndex = dragOverIndex !== null ? dragOverIndex : merged.length
-                        handleDrop(null, type, finalIndex)
-                      }}
-                    >
-                      {isAdmin && draggedId && dragOverType === type && dragOverIndex === 0 && (
-                        <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
-                      )}
-
-                      {merged.map((item, idx) => {
-                        const showZone =
-                          isAdmin &&
-                          draggedId &&
-                          dragOverType === type &&
-                          dragOverIndex === idx + 1 &&
-                          draggedId !== item.id
-                        return (
-                          <React.Fragment key={item.id}>
-                            <div data-id={item.id}>{renderItemCard(item, type, idx)}</div>
-                            {showZone && (
-                              <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
-                            )}
-                          </React.Fragment>
-                        )
-                      })}
-
-                      {isAdmin && draggedId && dragOverType === type && dragOverIndex === merged.length && (
-                        <div className="h-8 bg-primary/30 rounded-lg border-4 border-dashed border-primary transition-all" />
-                      )}
-                    </div>
+              return (
+                <div key={type} className={`${isSingleType ? "w-full max-w-4xl" : "flex-shrink-0 w-64"} space-y-4`} style={{ minWidth: isSingleType ? "auto" : "256px" }}>
+                  <div className="glass-strong rounded-lg p-4 sticky top-0 z-10">
+                    {editingType === type ? (
+                      <input
+                        type="text"
+                        value={editingTypeValue}
+                        onChange={(e) => setEditingTypeValue(e.target.value)}
+                        onBlur={handleTypeSave}
+                        onKeyDown={handleTypeKeyDown}
+                        className="text-xl font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-2"
+                        autoFocus
+                      />
+                    ) : (
+                      <h3 className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors" onDoubleClick={() => handleTypeDoubleClick(type)} title={isAdmin ? "Double-click to edit" : ""}>
+                        {type}
+                      </h3>
+                    )}
+                    <span className="text-foreground/60 text-sm">({merged.length} items)</span>
                   </div>
-                )
-              })}
+
+                  <div
+                    ref={(el) => (columnsRef.current[type] = el)}
+                    className={`space-y-3 max-h-[2000px]   overflow-y-auto relative ${isDragging ? 'overflow-y-scroll' : ''}`}
+                    style={{
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                      maxHeight: undefined,
+                      WebkitOverflowScrolling: "touch"
+                    }}
+                    onMouseEnter={() => onColumnMouseEnter(type)}
+                    onMouseLeave={() => onColumnMouseLeave(type)}
+                    onDragOver={(e) => {
+                      if (!isAdmin || !draggedId) return
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setDragOverType(type)
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const scrollThreshold = 80
+                      const scrollSpeed = 12
+                      if (e.clientY - rect.top < scrollThreshold) {
+                        (e.currentTarget as HTMLElement).scrollTop = Math.max(0, (e.currentTarget as HTMLElement).scrollTop - scrollSpeed)
+                      } else if (rect.bottom - e.clientY < scrollThreshold) {
+                        (e.currentTarget as HTMLElement).scrollTop = Math.min(
+                          (e.currentTarget as HTMLElement).scrollHeight - (e.currentTarget as HTMLElement).clientHeight,
+                          (e.currentTarget as HTMLElement).scrollTop + scrollSpeed
+                        )
+                      }
+                      const foundIndex = computeIndexFromContainer(e.currentTarget, e.clientY)
+                      setDragOverIndex(foundIndex)
+                    }}
+                    onDrop={(e) => {
+                      if (!isAdmin || !draggedId || dragOverType !== type) return
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const finalIndex = dragOverIndex !== null ? dragOverIndex : merged.length
+                      handleDrop(null, type, finalIndex)
+                    }}
+                  >
+                    {isAdmin && draggedId && dragOverType === type && dragOverIndex === 0 && <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />}
+
+                    {merged.map((item, idx) => {
+                      const showZone = isAdmin && draggedId && dragOverType === type && dragOverIndex === idx && draggedId !== item.id
+                      return (
+                        <React.Fragment key={item.id}>
+                          {showZone && <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />}
+                          <div data-id={item.id}>
+                            {renderItemCard(item, type, idx)}
+                          </div>
+                        </React.Fragment>
+                      )
+                    })}
+
+                    {isAdmin && draggedId && dragOverType === type && dragOverIndex === merged.length && (
+                      <div className="h-8 bg-primary/30 rounded-lg border-4 border-dashed border-primary transition-all" />
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {!itemsLoading && typeColumns.every((type) => mergeServerAndTempsForType(type).length === 0) && (
+      {!itemsLoading && typeColumns.every(type => mergeServerAndTempsForType(type).length === 0) && (
         <div className="text-center py-12">
           <p className="text-foreground/60 text-lg">{t("item.noItems")}</p>
         </div>
@@ -951,13 +859,7 @@ export function WatchServersButtons({ title }: { title?: string }) {
   return (
     <div className="flex gap-2 flex-wrap">
       {links.map((l) => (
-        <a
-          key={l.label}
-          href={l.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-3 py-2 glass rounded-md text-sm font-medium hover:opacity-90"
-        >
+        <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 glass rounded-md text-sm font-medium hover:opacity-90">
           {l.label}
         </a>
       ))}
