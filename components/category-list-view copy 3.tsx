@@ -818,7 +818,9 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             />
           </div>
         </div>
-
+ <div className="text-center py-12">
+            <div className="text-foreground/60"><Loading /></div>
+          </div>
         {itemsLoading ? (
           <div className="text-center py-12">
             <div className="text-foreground/60"><Loading /></div>

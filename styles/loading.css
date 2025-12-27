@@ -1,3 +1,15 @@
+.loading-container {
+    top: 50%;
+    left: 47%;
+}
+
+@media (max-width: 768px) {
+    .loading-container {
+        left: 33%;
+        top: 33%;
+    }
+}
+
 @keyframes squaree-animation {
     0% {
         left: 0;
@@ -105,6 +117,7 @@
     background-position: center;
     background-attachment: fixed;
     animation: squaree-animation 10s ease-in-out infinite both;
+    border: 2px solid rgb(121, 121, 121);
 }
 
 .loaderr-squaree:nth-of-type(0) {

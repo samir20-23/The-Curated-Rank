@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import CategoryCard from "./category-card"
 import CreateCategoryDialog from "@/components/admin/create-category-dialog"
+import Loading from "@/components/loading"
 
 interface CategoriesGridProps {
   selectedCategory?: string | null
@@ -16,14 +17,27 @@ interface CategoriesGridProps {
 export default function CategoriesGrid({ selectedCategory, onCategorySelect }: CategoriesGridProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [minLoadingDone, setMinLoadingDone] = useState(false)
+
   const router = useRouter()
   const { categories, loading, updateCategoriesOrder } = useFirebaseCategories()
   const { isAdmin } = useAuth()
   const { t } = useLanguage()
 
+  // Start a 6-second minimum loading timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadingDone(true)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/category/${categoryId}`)
   }
+
+  const isStillLoading = loading || !minLoadingDone
 
   return (
     <div>
@@ -60,26 +74,18 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
         </div>
       </div>
 
-      {loading ? (
+      {isStillLoading ? (
         <div className="text-center py-12">
-          <p className="text-foreground/60">Loading categories...</p>
+          <div className="text-foreground/60"><Loading /></div>
         </div>
       ) : (
         <div
           className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}
         >
-          {categories.map((category, idx) => (
-            <div
-              key={category.id}
-              draggable={isAdmin}
-              onDragStart={(e) => {
-                if (!isAdmin) return
-                e.dataTransfer?.setData("text/plain", category.id)
-              }}
-              onDragOver={(e) => {
-                if (!isAdmin) return
-                e.preventDefault()
-              }}
+          {categories.map((category) => (
+            <div key={category.id} draggable={isAdmin}
+              onDragStart={(e) => { if (!isAdmin) return; e.dataTransfer?.setData("text/plain", category.id) }}
+              onDragOver={(e) => { if (!isAdmin) return; e.preventDefault() }}
               onDrop={async (e) => {
                 if (!isAdmin) return
                 const draggedId = e.dataTransfer.getData("text/plain")
@@ -90,11 +96,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
                 const newCats = [...categories]
                 const [moved] = newCats.splice(srcIndex, 1)
                 newCats.splice(destIndex, 0, moved)
-                try {
-                  await updateCategoriesOrder(newCats)
-                } catch (err) {
-                  console.error("Error updating category order", err)
-                }
+                try { await updateCategoriesOrder(newCats) } catch (err) { console.error(err) }
               }}
             >
               <CategoryCard
@@ -115,12 +117,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
         </div>
       )}
 
-      {isAdmin && (
-        <CreateCategoryDialog
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-        />
-      )}
+      {isAdmin && <CreateCategoryDialog isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />}
     </div>
   )
 }
