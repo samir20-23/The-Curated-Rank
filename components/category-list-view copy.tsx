@@ -11,7 +11,7 @@ import CreateItemDialog from "@/components/admin/create-item-dialog"
 import DeleteConfirmation from "@/components/admin/delete-confirmation"
 import "./list.css"
 import type { Item } from "@/lib/types"
-
+import Loading from "./loading"
 interface CategoryListViewProps {
   categoryId: string
   onBack?: () => void
@@ -440,7 +440,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
         {itemsLoading ? (
           <div className="text-center py-12">
-            <p className="text-foreground/60">{t("common.loading")}</p>
+            <div className="text-foreground/60"><Loading /></div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -646,7 +646,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
       {itemsLoading ? (
         <div className="text-center py-12">
-          <p className="text-foreground/60">{t("common.loading")}</p>
+          <div className="text-foreground/60"><Loading /></div>
         </div>
       ) : (
         <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4 h-[1000px] ${isDragging ? "" : ""}`} style={{

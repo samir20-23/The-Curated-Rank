@@ -60,5 +60,22 @@
     "type": "Type",
     "optional": "Optional",
     "required": "Required"
+  },
+  "hero": {
+    "d": "D",
+    "i": "i",
+    "s": "s",
+    "c": "c",
+    "o1": "o",
+    "amp": "&",
+    "E": "E",
+    "x": "x",
+    "p": "p",
+    "l": "l",
+    "o2": "o",
+    "r": "r",
+    "e": "e",
+    "welcome": "Welcome to MarwanRank — curated top lists of movies, shows, and content just for you. Browse, explore, and find your favorites easily.",
+    "scroll": "Scroll down to see the top rankings, newest collections, and curated content from various categories."
   }
 }

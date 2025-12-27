@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
@@ -8,9 +8,11 @@ import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import CreateItemDialog from "@/components/admin/create-item-dialog"
 import DeleteConfirmation from "@/components/admin/delete-confirmation"
+import "./list.css"
 import type { Item } from "@/lib/types"
 import Loading from "./loading"
-import "./list.css"
+
+
 
 interface CategoryListViewProps {
   categoryId: string
@@ -20,14 +22,6 @@ interface CategoryListViewProps {
 type TempItem = Item & { isTemp: true; __originalType?: string; insertPosition?: number }
 
 export default function CategoryListView({ categoryId }: CategoryListViewProps) {
-  const router = useRouter()
-  const { t } = useLanguage()
-  const { isAdmin } = useAuth()
-
-  const { items, loading: itemsLoading, updateRanks, updateItem, deleteItem } = useFirebaseItems(categoryId)
-  const { categories, updateCategory } = useFirebaseCategories()
-  const category = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId])
-
   const [filterText, setFilterText] = useState("")
   const [filterType, setFilterType] = useState<string>("")
   const [filterRank, setFilterRank] = useState<string>("")
@@ -37,6 +31,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const router = useRouter()
+  const { items, loading: itemsLoading, updateRanks, updateItem, deleteItem } = useFirebaseItems(categoryId)
+  const { categories, updateCategory } = useFirebaseCategories()
+  const { isAdmin } = useAuth()
+  const { t } = useLanguage()
 
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [draggedType, setDraggedType] = useState<string | null>(null)
@@ -44,96 +43,71 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
   const [dragOverType, setDragOverType] = useState<string | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [isDuplicating, setIsDuplicating] = useState(false)
+  const [autoScrollMap, setAutoScrollMap] = useState<Record<string, "up" | "down" | null>>({})
 
   const [tempItems, setTempItems] = useState<TempItem[]>([])
+  const [isDuplicating, setIsDuplicating] = useState(false)
 
   const columnsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const autoIntervalsRef = useRef<Record<string, number | null>>({})
   const autoDirRef = useRef<Record<string, number>>({})
 
+  const category = categories.find((c) => c.id === categoryId)
   const useTypes = category?.useTypes !== false
+  const availableTypes = useTypes
+    ? category?.tags || (category?.type ? category.type.split(", ").map((t) => t.trim()) : [])
+    : []
 
-  const availableTypes = useMemo(() => {
-    if (!useTypes) return []
-    if (category?.tags && category.tags.length > 0) return category.tags
-    if (category?.type) return category.type.split(",").map((s) => s.trim()).filter(Boolean)
-    return []
-  }, [category?.tags, category?.type, useTypes])
-
-  const getServerItemsForType = useCallback(
-    (type?: string) => {
-      if (!type) {
-        return items.filter((i) => !i.type).sort((a, b) => a.rank - b.rank)
-      }
-      return items.filter((i) => i.type === type).sort((a, b) => a.rank - b.rank)
-    },
-    [items],
-  )
-
-  const getServerAll = useCallback(() => items.slice().sort((a, b) => a.rank - b.rank), [items])
-
-  const mergeServerAndTempsForType = useCallback(
-    (type?: string) => {
-      const server = getServerItemsForType(type)
-      const temps = tempItems.filter((t) => (t.type || "") === (type || ""))
-      const result: Item[] = []
-      for (let i = 0; i < server.length; i++) {
-        const before = temps.filter((tt) => (tt.insertPosition ?? server.length) === i)
-        result.push(...before)
-        result.push(server[i])
-      }
-      const endTemps = temps.filter((tt) => (tt.insertPosition ?? server.length) >= server.length)
-      result.push(...endTemps)
-      return result
-    },
-    [getServerItemsForType, tempItems],
-  )
-
-  const itemsByType = useMemo(() => {
-    if (!useTypes || availableTypes.length === 0) return {}
-    return availableTypes.reduce((acc: Record<string, Item[]>, type) => {
-      const merged = mergeServerAndTempsForType(type)
-      if (merged.length > 0) acc[type] = merged
-      return acc
-    }, {})
-  }, [availableTypes, mergeServerAndTempsForType, useTypes])
-
-  const isListMode = useMemo(() => {
-    if (!useTypes) return true
-    if (availableTypes.length === 0) return true
-    if (availableTypes.length === 1) return true
-    return Object.keys(itemsByType).length <= 1
-  }, [availableTypes.length, itemsByType, useTypes])
-
-  const mergedNoType = useMemo(() => mergeServerAndTempsForType(undefined), [mergeServerAndTempsForType])
-
-  const filterTimeoutRef = useRef<number | null>(null)
-  const [debouncedFilterText, setDebouncedFilterText] = useState(filterText)
-  useEffect(() => {
-    if (filterTimeoutRef.current) window.clearTimeout(filterTimeoutRef.current)
-    filterTimeoutRef.current = window.setTimeout(() => {
-      setDebouncedFilterText(filterText)
-    }, 220)
-    return () => {
-      if (filterTimeoutRef.current) window.clearTimeout(filterTimeoutRef.current)
+  const getServerItemsForType = (type?: string) => {
+    if (!type) {
+      return items.filter((i) => !i.type).sort((a, b) => a.rank - b.rank)
     }
-  }, [filterText])
+    return items.filter((i) => i.type === type).sort((a, b) => a.rank - b.rank)
+  }
 
-  const filteredItems = useMemo(() => {
-    return mergedNoType.filter((item) => {
-      const matchesText =
-        !debouncedFilterText ||
-        (item.title || "").toLowerCase().includes(debouncedFilterText.toLowerCase()) ||
-        (item.description || "").toLowerCase().includes(debouncedFilterText.toLowerCase())
-      const matchesType = !filterType || item.type === filterType
-      const matchesRank =
-        !filterRank ||
-        (item.rank !== undefined && item.rank.toString() === filterRank) ||
-        (item.rank !== undefined && item.rank.toString().includes(filterRank))
-      return matchesText && matchesType && matchesRank
+  const getServerAll = () => items.slice().sort((a, b) => a.rank - b.rank)
+
+  const mergeServerAndTempsForType = (type?: string) => {
+    const server = getServerItemsForType(type)
+    const temps = tempItems.filter((t) => (t.type || "") === (type || ""))
+    const result: Item[] = []
+    for (let i = 0; i < server.length; i++) {
+      const before = temps.filter((tt) => (tt.insertPosition ?? server.length) === i)
+      result.push(...before)
+      result.push(server[i])
+    }
+    const endTemps = temps.filter((tt) => (tt.insertPosition ?? server.length) >= server.length)
+    result.push(...endTemps)
+    return result
+  }
+
+  useEffect(() => {
+    if (!availableTypes || availableTypes.length === 0) return
+    const map: Record<string, "up" | "down" | null> = {}
+    availableTypes.forEach((type) => {
+      const r = Math.random()
+      if (r > 0.88) map[type] = "up"
+      else if (r > 0.76) map[type] = "down"
+      else map[type] = null
     })
-  }, [debouncedFilterText, filterRank, filterType, mergedNoType])
+    setAutoScrollMap(map)
+  }, [availableTypes.join(",")])
+
+  useEffect(() => {
+    const onDragOverWindow = (e: DragEvent) => {
+      if (!isDragging) return
+      const y = e.clientY
+      const threshold = 80
+      const speed = 30
+      if (y < threshold) {
+        window.scrollBy({ top: -speed, behavior: "auto" })
+      } else if (window.innerHeight - y < threshold) {
+        window.scrollBy({ top: speed, behavior: "auto" })
+      }
+    }
+    window.addEventListener("dragover", onDragOverWindow)
+    return () => window.removeEventListener("dragover", onDragOverWindow)
+  }, [isDragging])
 
   const computeIndexFromContainer = (container: Element, clientY: number) => {
     const children = Array.from(container.querySelectorAll<HTMLElement>(".draggable-item"))
@@ -152,25 +126,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     return children.length
   }
 
-  const lastDragOverTsRef = useRef(0)
-  const throttleDragOver = (fn: () => void) => {
-    const now = Date.now()
-    if (now - lastDragOverTsRef.current > 40) {
-      lastDragOverTsRef.current = now
-      fn()
-    }
-  }
-
-  const resetDragState = useCallback(() => {
-    setDraggedId(null)
-    setDraggedType(null)
-    setDragOverType(null)
-    setDragOverIndex(null)
-    setDragDirection(null)
-    setIsDragging(false)
-  }, [])
-
-  const handleDragStart = useCallback((itemId: string, type?: string, e?: React.DragEvent) => {
+  const handleDragStart = (itemId: string, type?: string, e?: React.DragEvent) => {
     if (!isAdmin) return
     setDraggedId(itemId)
     setDraggedType(type || null)
@@ -181,16 +137,26 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     if (e) {
       const img = new Image()
       img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+      img.onload = () => {
+        try {
+          e.dataTransfer.setDragImage(img, 0, 0)
+        } catch { }
+      }
       try {
         e.dataTransfer.setDragImage(img, 0, 0)
-        e.dataTransfer.effectAllowed = "move"
       } catch { }
+      e.dataTransfer.effectAllowed = "move"
     }
-  }, [isAdmin])
+  }
 
-  const handleDragEnd = useCallback(() => {
-    resetDragState()
-  }, [resetDragState])
+  const resetDragState = () => {
+    setDraggedId(null)
+    setDraggedType(null)
+    setDragOverType(null)
+    setDragOverIndex(null)
+    setDragDirection(null)
+    setIsDragging(false)
+  }
 
   const visualIndexToServerIndex = (mergedList: Item[], visualIndex: number) => {
     let count = 0
@@ -201,122 +167,135 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     return count
   }
 
-  const handleDrop = useCallback(
-    async (targetId: string | null, type?: string, dropIndex?: number) => {
-      if (!isAdmin || !draggedId) {
+  const handleDrop = async (targetId: string | null, type?: string, dropIndex?: number) => {
+    if (!isAdmin || !draggedId) {
+      resetDragState()
+      return
+    }
+    const isTemp = draggedId.startsWith("dup-")
+    try {
+      if (isTemp) {
+        setTempItems((prev) => {
+          const tmp = prev.find((p) => p.id === draggedId)
+          if (!tmp) return prev
+          const newPrev = prev.filter((p) => p.id !== draggedId)
+          const targetType = type || undefined
+          const serverList = getServerItemsForType(targetType)
+          const existingTemps = newPrev.filter((x) => (x.type || "") === (targetType || ""))
+          const insertPos =
+            typeof dropIndex === "number"
+              ? Math.max(0, Math.min(dropIndex, serverList.length + existingTemps.length))
+              : serverList.length
+          const moved: TempItem = { ...tmp, type: targetType, insertPosition: insertPos }
+          return [...newPrev, moved]
+        })
+        setIsDuplicating(false)
         resetDragState()
         return
       }
-      const isTemp = draggedId.startsWith("dup-")
-      try {
-        if (isTemp) {
-          setTempItems((prev) => {
-            const tmp = prev.find((p) => p.id === draggedId)
-            if (!tmp) return prev
-            const newPrev = prev.filter((p) => p.id !== draggedId)
-            const targetType = type || undefined
-            const serverList = getServerItemsForType(targetType)
-            const existingTemps = newPrev.filter((x) => (x.type || "") === (targetType || ""))
-            const insertPos =
-              typeof dropIndex === "number"
-                ? Math.max(0, Math.min(dropIndex, serverList.length + existingTemps.length))
-                : serverList.length
-            const moved: TempItem = { ...tmp, type: targetType, insertPosition: insertPos }
-            return [...newPrev, moved]
-          })
-          setIsDuplicating(false)
+
+      if (useTypes && type) {
+        const sourceType = draggedType || undefined
+        const targetType = type || undefined
+        const sourceServer = getServerItemsForType(sourceType)
+        const targetServer = getServerItemsForType(targetType)
+        const mergedTarget = mergeServerAndTempsForType(targetType)
+        const sourceIndex = sourceServer.findIndex((i) => i.id === draggedId)
+        if (sourceIndex === -1) {
           resetDragState()
           return
         }
 
-        if (useTypes && type) {
-          const sourceType = draggedType || undefined
-          const targetType = type || undefined
-          const sourceServer = getServerItemsForType(sourceType)
-          const targetServer = getServerItemsForType(targetType)
-          const mergedTarget = mergeServerAndTempsForType(targetType)
-          const sourceIndex = sourceServer.findIndex((i) => i.id === draggedId)
-          if (sourceIndex === -1) {
-            resetDragState()
-            return
-          }
-
-          let serverTargetIndex: number
-          if (typeof dropIndex === "number") {
-            serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
-          } else if (targetId) {
-            const visualIdx = mergedTarget.findIndex((i) => i.id === targetId)
-            const vi = visualIdx === -1 ? mergedTarget.length : visualIdx
-            serverTargetIndex = visualIndexToServerIndex(mergedTarget, vi)
-          } else {
-            serverTargetIndex = targetServer.length
-          }
-
-          serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, targetServer.length))
-
-          if (sourceType === targetType) {
-            const reorderedItems = [...targetServer]
-            const [draggedItem] = reorderedItems.splice(sourceIndex, 1)
-            const adjustedTargetIndex = sourceIndex < serverTargetIndex ? serverTargetIndex - 1 : serverTargetIndex
-            reorderedItems.splice(adjustedTargetIndex, 0, draggedItem)
-            const updates = reorderedItems.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
-            await updateRanks(updates)
-          } else {
-            const newSource = [...sourceServer]
-            const [draggedItem] = newSource.splice(sourceIndex, 1)
-            const newTarget = [...targetServer]
-            newTarget.splice(serverTargetIndex, 0, draggedItem)
-            const sourceUpdates = newSource.map((item, idx) => ({ ...item, rank: idx + 1 }))
-            const targetUpdates = newTarget.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
-            await updateItem(draggedId, { type: targetType || undefined })
-            await updateRanks([...sourceUpdates, ...targetUpdates])
-          }
+        let serverTargetIndex: number
+        if (typeof dropIndex === "number") {
+          serverTargetIndex = visualIndexToServerIndex(mergedTarget, dropIndex)
+        } else if (targetId) {
+          const visualIdx = mergedTarget.findIndex((i) => i.id === targetId)
+          const vi = visualIdx === -1 ? mergedTarget.length : visualIdx
+          serverTargetIndex = visualIndexToServerIndex(mergedTarget, vi)
         } else {
-          const serverAll = getServerAll()
-          const mergedAll = mergeServerAndTempsForType(undefined)
-          const sourceIndex = serverAll.findIndex((i) => i.id === draggedId)
-          if (sourceIndex === -1) {
-            resetDragState()
-            return
-          }
-          let serverTargetIndex: number
-          if (typeof dropIndex === "number") {
-            serverTargetIndex = visualIndexToServerIndex(mergedAll, dropIndex)
-          } else if (targetId) {
-            const visualIdx = mergedAll.findIndex((i) => i.id === targetId)
-            const vi = visualIdx === -1 ? mergedAll.length : visualIdx
-            serverTargetIndex = visualIndexToServerIndex(mergedAll, vi)
-          } else {
-            serverTargetIndex = serverAll.length
-          }
-
-          serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, serverAll.length))
-          const newItems = [...serverAll]
-          const [draggedItem] = newItems.splice(sourceIndex, 1)
-          if (sourceIndex < serverTargetIndex) serverTargetIndex -= 1
-          newItems.splice(serverTargetIndex, 0, draggedItem)
-          const itemsToReorder = newItems.map((item, idx) => ({ ...item, rank: idx + 1 }))
-          await updateRanks(itemsToReorder)
+          serverTargetIndex = targetServer.length
         }
-      } catch (err) {
-        console.error("drop error:", err)
-      } finally {
-        resetDragState()
-      }
-    },
-    [draggedId, draggedType, getServerAll, getServerItemsForType, isAdmin, mergeServerAndTempsForType, resetDragState, updateItem, updateRanks, useTypes],
-  )
 
-  const handleTypeDoubleClick = useCallback((type: string) => {
+        // Ensure target index is within bounds
+        serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, targetServer.length))
+
+        // If same type, work with single array for proper reordering
+        if (sourceType === targetType) {
+          const reorderedItems = [...targetServer]
+          const [draggedItem] = reorderedItems.splice(sourceIndex, 1)
+
+          // Adjust target index if moving forward in the list
+          const adjustedTargetIndex = sourceIndex < serverTargetIndex ? serverTargetIndex - 1 : serverTargetIndex
+          reorderedItems.splice(adjustedTargetIndex, 0, draggedItem)
+
+          // Update all ranks
+          const updates = reorderedItems.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
+          await updateRanks(updates)
+        } else {
+          // Different types - move between rows
+          const newSource = [...sourceServer]
+          const [draggedItem] = newSource.splice(sourceIndex, 1)
+          const newTarget = [...targetServer]
+          newTarget.splice(serverTargetIndex, 0, draggedItem)
+
+          const sourceUpdates = newSource.map((item, idx) => ({ ...item, rank: idx + 1 }))
+          const targetUpdates = newTarget.map((item, idx) => ({ ...item, rank: idx + 1, type: targetType }))
+
+          await updateItem(draggedId, { type: targetType || undefined })
+          await updateRanks([...sourceUpdates, ...targetUpdates])
+        }
+      } else {
+        const serverAll = getServerAll()
+        const mergedAll = mergeServerAndTempsForType(undefined)
+        const sourceIndex = serverAll.findIndex((i) => i.id === draggedId)
+        if (sourceIndex === -1) {
+          resetDragState()
+          return
+        }
+        let serverTargetIndex: number
+        // Prioritize dropIndex - this is the calculated position from drag over
+        if (typeof dropIndex === "number") {
+          serverTargetIndex = visualIndexToServerIndex(mergedAll, dropIndex)
+        } else if (targetId) {
+          // If no dropIndex, calculate from target item position
+          const visualIdx = mergedAll.findIndex((i) => i.id === targetId)
+          const vi = visualIdx === -1 ? mergedAll.length : visualIdx
+          serverTargetIndex = visualIndexToServerIndex(mergedAll, vi)
+        } else {
+          serverTargetIndex = serverAll.length
+        }
+
+        // Ensure target index is within bounds
+        serverTargetIndex = Math.max(0, Math.min(serverTargetIndex, serverAll.length))
+        const newItems = [...serverAll]
+        const [draggedItem] = newItems.splice(sourceIndex, 1)
+        if (sourceIndex < serverTargetIndex) serverTargetIndex -= 1
+        newItems.splice(serverTargetIndex, 0, draggedItem)
+        const itemsToReorder = newItems.map((item, idx) => ({ ...item, rank: idx + 1 }))
+        await updateRanks(itemsToReorder)
+      }
+    } catch (err) {
+      console.error("drop error:", err)
+    } finally {
+      resetDragState()
+    }
+  }
+
+  const handleDragEnd = () => {
+    resetDragState()
+  }
+
+  const handleTypeDoubleClick = (type: string) => {
     if (!isAdmin) return
     const typeItems = getServerItemsForType(type)
     if (typeItems.length > 0) {
       setEditingType(type)
       setEditingTypeValue(type)
     }
-  }, [getServerItemsForType, isAdmin])
+  }
 
-  const handleTypeSave = useCallback(async () => {
+  const handleTypeSave = async () => {
     if (!editingType || !category) return
     const oldType = editingType
     const newType = editingTypeValue.trim()
@@ -342,17 +321,17 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     }
     setEditingType(null)
     setEditingTypeValue("")
-  }, [availableTypes, category, categoryId, editingType, editingTypeValue, items, updateCategory, updateItem, getServerItemsForType])
+  }
 
-  const handleTypeKeyDown = useCallback((e: React.KeyboardEvent) => {
+  const handleTypeKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleTypeSave()
     else if (e.key === "Escape") {
       setEditingType(null)
       setEditingTypeValue("")
     }
-  }, [handleTypeSave])
+  }
 
-  const handleDeleteItem = useCallback(async () => {
+  const handleDeleteItem = async () => {
     if (!deleteTarget) return
     try {
       await deleteItem(deleteTarget.id)
@@ -361,14 +340,14 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     } catch (error) {
       console.error("Error deleting item:", error)
     }
-  }, [deleteItem, deleteTarget])
+  }
 
-  const handleDeleteClick = useCallback((item: Item) => {
+  const handleDeleteClick = (item: Item) => {
     setDeleteTarget(item)
     setShowConfirmDelete(false)
-  }, [])
+  }
 
-  const handleDuplicateClick = useCallback((item: Item) => {
+  const handleDuplicateClick = (item: Item) => {
     if (!isAdmin) return
     const tmpId = `dup-${Date.now()}`
     const serverList = getServerItemsForType(item.type)
@@ -389,15 +368,81 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       const el = document.querySelector(`.draggable-item[data-id="${tmpId}"]`) as HTMLElement | null
       if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
     }, 50)
-  }, [getServerItemsForType, isAdmin])
+  }
+
+  const mergedNoType = mergeServerAndTempsForType(undefined)
+  const filteredItems = mergedNoType.filter((item) => {
+    const matchesText =
+      !filterText ||
+      (item.title || "").toLowerCase().includes(filterText.toLowerCase()) ||
+      (item.description || "").toLowerCase().includes(filterText.toLowerCase())
+    const matchesType = !filterType || item.type === filterType
+    const matchesRank =
+      !filterRank ||
+      (item.rank !== undefined && item.rank.toString() === filterRank) ||
+      (item.rank !== undefined && item.rank.toString().includes(filterRank))
+    return matchesText && matchesType && matchesRank
+  })
 
   const itemMinHeight = 72
-  const imageSize = 160
-  const cardHeight = 200
 
-  const renderItemCard = useCallback((item: Item, type?: string, indexInMerged?: number, listMode: boolean = false) => {
+  const startAutoTick = (type: string) => {
+    clearAutoInterval(type)
+    const container = columnsRef.current[type]
+    if (!container) return
+    autoDirRef.current[type] = autoDirRef.current[type] || 1
+    autoIntervalsRef.current[type] = window.setInterval(() => {
+      if (!container) return
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight)
+      if (maxScroll <= 0) return
+      const dir = autoDirRef.current[type]
+      const step = 0.6
+      container.scrollTop = Math.max(0, Math.min(maxScroll, container.scrollTop + dir * step))
+      if (container.scrollTop <= 0) autoDirRef.current[type] = 1
+      else if (container.scrollTop >= maxScroll) autoDirRef.current[type] = -1
+    }, 40)
+  }
+
+  const clearAutoInterval = (type: string) => {
+    const id = autoIntervalsRef.current[type]
+    if (id) {
+      window.clearInterval(id)
+      autoIntervalsRef.current[type] = null
+    }
+  }
+
+  const onColumnMouseEnter = (type: string) => {
+    clearAutoInterval(type)
+    setAutoScrollMap((prev) => ({ ...prev, [type]: null }))
+    const container = columnsRef.current[type]
+    if (container) container.scrollTop = 0
+  }
+
+  const onColumnMouseLeave = (type: string) => {
+    startAutoTick(type)
+  }
+
+  // helper: items by type (non-empty only)
+  function itemsByTypeCalculated() {
+    if (!useTypes || availableTypes.length === 0) return {}
+    return availableTypes.reduce((acc: Record<string, Item[]>, type) => {
+      const merged = mergeServerAndTempsForType(type)
+      if (merged.length > 0) acc[type] = merged
+      return acc
+    }, {})
+  }
+
+  const itemsByType = itemsByTypeCalculated()
+  // list mode = no types OR no available types OR only one type OR only one type has items
+  const isListMode =
+    !useTypes ||
+    availableTypes.length === 0 ||
+    availableTypes.length === 1 ||
+    Object.keys(itemsByType).length <= 1
+
+  const renderItemCard = (item: Item, type?: string, indexInMerged?: number, listMode: boolean = false) => {
     const isTemp = (item as any).isTemp
-
+    // list mode styles: horizontal card with fixed image ~160x160 and text on right
     if (listMode) {
       return (
         <div
@@ -407,8 +452,8 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           className={`group draggable-item glass-strong rounded-lg overflow-hidden transition-all relative flex gap-4 items-stretch`}
           style={{
             width: "100%",
-            minHeight: `${cardHeight}px`,
-            opacity: isDuplicating && !isTemp ? 0.6 : 1,
+            minHeight: "200px",
+            opacity: isDuplicating && !isTemp ? 0.5 : 1,
             userSelect: "none",
             WebkitUserSelect: "none",
           }}
@@ -423,14 +468,16 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             if (!isAdmin || !draggedId || draggedId === item.id) return
             e.preventDefault()
             e.stopPropagation()
-            if (type !== undefined) setDragOverType(type)
-            else setDragOverType(null)
+            if (type !== undefined) {
+              setDragOverType(type)
+            } else {
+              setDragOverType(null)
+            }
+            // in list mode we set index by computing container index
             const container = e.currentTarget.parentElement as Element | null
             if (container) {
-              throttleDragOver(() => {
-                const calculatedIndex = computeIndexFromContainer(container, e.clientY)
-                setDragOverIndex(calculatedIndex)
-              })
+              const calculatedIndex = computeIndexFromContainer(container, e.clientY)
+              setDragOverIndex(calculatedIndex)
             }
           }}
           onDrop={(e) => {
@@ -438,8 +485,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             e.preventDefault()
             e.stopPropagation()
             const container = e.currentTarget.parentElement as Element | null
+            // determine drop index relative to list
             let dropIndex: number | undefined
-            if (container) dropIndex = computeIndexFromContainer(container, e.clientY)
+            if (container) {
+              dropIndex = computeIndexFromContainer(container, e.clientY)
+            }
             handleDrop(item.id, type, dropIndex)
           }}
           onDragEnd={handleDragEnd}
@@ -448,14 +498,13 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
               router.push(`/item/${item.id}`)
             }
           }}
-          role="article"
-          aria-label={item.title || "Item"}
         >
+          {/* left: image */}
           <div
             className="flex-shrink-0 rounded overflow-hidden"
             style={{
-              width: `${imageSize}px`,
-              height: `${imageSize}px`,
+              width: "160px",
+              height: "160px",
               margin: "16px",
               background: "rgba(0,0,0,0.04)",
             }}
@@ -467,70 +516,65 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           >
             {item.imageUrl ? (
               <img
-                src={item.imageUrl}
+                src={item.imageUrl || "/placeholder.svg"}
                 alt={item.title || `Item ${item.rank}`}
                 className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
                 draggable={false}
-                style={{ objectFit: "cover", width: `${imageSize}px`, height: `${imageSize}px` }}
+                style={{ objectFit: "cover", width: "160px", height: "160px" }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ minHeight: `${imageSize}px` }}>
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ minHeight: "160px" }}
+              >
                 <span className="text-2xl">📌</span>
               </div>
             )}
           </div>
 
+          {/* right: content */}
           <div className="flex-1 pr-4 py-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h4 className="font-semibold text-foreground text-base truncate">{item.title}</h4>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-foreground text-lg line-clamp-2">{item.title}</h4>
                   {item.description && (
-                    <p className="text-foreground/70 mt-2 text-sm line-clamp-3">{item.description}</p>
-                  )}
-                  {item.type && (
-                    <div className="mt-3">
-                      <span className="inline-block text-xs px-2 py-1 rounded-full bg-primary/10 border border-primary/12">
-                        {item.type}
-                      </span>
-                    </div>
+                    <p className="text-foreground/60 mt-2 text-sm line-clamp-3">{item.description}</p>
                   )}
                 </div>
-
-                <div className="text-xs font-bold text-foreground/60 ml-2" aria-hidden>
+                <div className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent pl-2">
                   #{item.rank ?? (item as any).insertPosition ?? "-"}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 mt-3">
-              <div className="text-sm text-foreground/60">{isTemp ? t("item.temp") ?? "Temp" : ""}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm text-foreground/60">{item.type ?? ""}</div>
 
+              {/* Admin actions: in listMode we hide the Dup button (avoid duplication) */}
               {isAdmin && (
                 <div className="flex gap-2">
                   <button
+                    style={{ cursor: "pointer" }}
                     onClick={(e) => {
                       e.stopPropagation()
                       setEditingItem(item)
                     }}
                     className="p-1 glass text-primary hover:bg-primary/20 rounded text-xs"
-                    aria-label={t("admin.edit") ?? "Edit"}
                   >
                     {t("admin.edit")}
                   </button>
-
                   <button
+                    style={{ cursor: "pointer" }}
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDeleteClick(item)
                     }}
                     className="p-1 glass text-red-400 hover:bg-red-500/20 rounded text-xs"
-                    aria-label={t("admin.delete") ?? "Delete"}
                   >
                     {t("admin.delete")}
                   </button>
+                  {/* Dup hidden in list mode to avoid duplicate buttons */}
                 </div>
               )}
             </div>
@@ -539,12 +583,13 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
       )
     }
 
+    // default (column / card) rendering (unchanged behavior)
     return (
       <div
         key={item.id}
         data-id={item.id}
         draggable={isAdmin}
-        className={`group draggable-item glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-30 scale-95 z-50" : isAdmin ? "cursor-grab" : "cursor-pointer"}`}
+        className={`group draggable-item glass-strong rounded-lg overflow-hidden transition-all relative ${draggedId === item.id ? "opacity-30 scale-90 rotate-2 z-50 cursor-grabbing" : isAdmin ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} ${isDragging && draggedId !== item.id ? "scale-90" : ""}`}
         style={{
           width: "100%",
           minHeight: `${itemMinHeight}px`,
@@ -563,41 +608,62 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           if (!isAdmin || !draggedId || draggedId === item.id) return
           e.preventDefault()
           e.stopPropagation()
-          if (type !== undefined) setDragOverType(type)
-          else setDragOverType(null)
+
+          // Set drag over type and calculate index
+          if (type !== undefined) {
+            setDragOverType(type)
+          } else {
+            setDragOverType(null)
+          }
+
+          // Calculate drop position based on mouse position
           const rect = e.currentTarget.getBoundingClientRect()
           const y = e.clientY - rect.top
           const midPoint = rect.height / 2
-          const calculatedIndex = indexInMerged !== undefined ? (y < midPoint ? indexInMerged : indexInMerged + 1) : 0
-          throttleDragOver(() => setDragOverIndex(calculatedIndex))
+          const calculatedIndex = indexInMerged !== undefined
+            ? (y < midPoint ? indexInMerged : indexInMerged + 1)
+            : (type !== undefined ? 0 : 0)
+
+          setDragOverIndex(calculatedIndex)
         }}
         onDrop={(e) => {
           if (!isAdmin || !draggedId || draggedId === item.id) return
           e.preventDefault()
           e.stopPropagation()
+
+          // Calculate drop position based on mouse position
           const rect = e.currentTarget.getBoundingClientRect()
           const y = e.clientY - rect.top
           const midPoint = rect.height / 2
+
+          // Use the calculated drop index if available, otherwise use item position
           let dropIndex: number | undefined
           if (indexInMerged !== undefined) {
             dropIndex = y < midPoint ? indexInMerged : indexInMerged + 1
           } else if (dragOverIndex !== null) {
             dropIndex = dragOverIndex
           }
+
+          // Pass the calculated index - this is the key for same-row drops
           handleDrop(item.id, type, dropIndex)
         }}
         onDragEnd={handleDragEnd}
+        onMouseDown={(e) => {
+          if (!isAdmin || (e.target as HTMLElement).closest("button")) {
+            e.preventDefault()
+          }
+        }}
         onClick={(e) => {
           if (!draggedId && !(e.target as HTMLElement).closest("button")) {
             router.push(`/item/${item.id}`)
           }
         }}
-        role="article"
-        aria-label={item.title || "Item"}
       >
         <div className="p-3 space-y-2">
           {isAdmin && draggedId === item.id && dragDirection && (
-            <div className={`absolute top-2 right-2 text-base animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}>
+            <div
+              className={`absolute top-2 right-2 text-base animate-bounce z-10 ${dragDirection === "up" ? "text-green-400" : "text-blue-400"}`}
+            >
               {dragDirection === "up" ? "⬆️" : "⬇️"}
             </div>
           )}
@@ -605,6 +671,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           {isAdmin && (
             <div className="flex justify-end gap-2 relative z-20">
               <button
+                style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   e.stopPropagation()
                   setEditingItem(item)
@@ -614,6 +681,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                 {t("admin.edit")}
               </button>
               <button
+                style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleDeleteClick(item)
@@ -623,6 +691,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                 {t("admin.delete")}
               </button>
               <button
+                style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleDuplicateClick(item)
@@ -635,64 +704,67 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           )}
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">#{item.rank ?? (item as any).insertPosition ?? "-"}</span>
-
+            <span className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              #{item.rank ?? (item as any).insertPosition ?? "-"}
+            </span>
           </div>
 
-          <div className="w-full overflow-hidden rounded" style={{ pointerEvents: "none" }} onClick={() => router.push(`/item/${item.id}`)}>
+          <div
+            className="w-full overflow-hidden rounded"
+            style={{ pointerEvents: "none" }}
+            onClick={(e) => {
+              if (!draggedId && !(e.target as HTMLElement).closest("button")) {
+                router.push(`/item/${item.id}`)
+              }
+            }}
+          >
             {item.imageUrl ? (
               <img
-                src={item.imageUrl}
+                src={item.imageUrl || "/placeholder.svg"}
                 alt={item.title || `Item ${item.rank}`}
                 className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
                 draggable={false}
                 style={{ pointerEvents: "none", objectFit: "cover" }}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center" style={{ minHeight: "35px", pointerEvents: "none" }}>
+              <div
+                className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center"
+                style={{ minHeight: "35px", pointerEvents: "none" }}
+              >
                 <span className="text-base">📌</span>
               </div>
             )}
           </div>
 
-          <h4 className="font-bold text-foreground text-[10px] line-clamp-1">{item.title}</h4>
-          {item.description && <p className="text-foreground/60 text-[9px] line-clamp-1 overflow-hidden">{item.description}</p>}
+          <h4 className="font-bold text-foreground text-[10px] line-clamp-1 group-hover:text-primary transition-colors" style={{ pointerEvents: "none" }}>
+            {item.title}
+          </h4>
+          {item.description && (
+            <p className="text-foreground/60 text-[9px] line-clamp-1 overflow-hidden" style={{ pointerEvents: "none" }}>
+              {item.description}
+            </p>
+          )}
         </div>
       </div>
     )
-  }, [
-    cardHeight,
-    computeIndexFromContainer,
-    dragOverIndex,
-    draggedId,
-    handleDeleteClick,
-    handleDragEnd,
-    handleDragStart,
-    handleDrop,
-    handleDuplicateClick,
-    imageSize,
-    isAdmin,
-    isDuplicating,
-    router,
-    t,
-    throttleDragOver,
-  ])
+  }
 
   if (isListMode) {
+    // SINGLE-LIST layout (no types or single type / only one type with items)
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {isDuplicating && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }} />
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }}
+          />
         )}
 
         <div className="flex items-center justify-between " style={{ padding: "20px 40px 0px 40px" }}>
           <div className="flex items-center gap-1">
             <button
+              style={{ cursor: "pointer" }}
               onClick={() => router.push("/")}
               className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors"
-              aria-label="Back"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -703,7 +775,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             </div>
           </div>
           {isAdmin && (
-            <button onClick={() => setIsCreateItemOpen(true)} className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition">
+            <button
+              style={{ cursor: "pointer" }}
+              onClick={() => setIsCreateItemOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
+            >
               {t("admin.createItem")}
             </button>
           )}
@@ -718,7 +794,8 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
               onChange={(e) => setFilterText(e.target.value)}
               className="flex-1 min-w-[200px] bg-transparent text-foreground placeholder:text-foreground/40 focus:outline-none border border-border/50 rounded-lg px-3 py-2"
             />
-            {useTypes && availableTypes.length > 1 && (
+            {/* keep type select only if types exist & >1 to avoid oddness */}
+            {useTypes && availableTypes.length > 0 && availableTypes.length > 1 && (
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
@@ -747,7 +824,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             <div className="text-foreground/60"><Loading /></div>
           </div>
         ) : (
-          <div className="space-y-4 px-4" style={{ overflowY: "auto" }}>
+          <div className="space-y-4 px-4">
             <div
               onDragOver={(e) => {
                 if (!isAdmin || !draggedId) return
@@ -759,7 +836,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                 <React.Fragment key={item.id}>
                   {isAdmin &&
                     draggedId &&
-                    dragOverType === null &&
+                    dragOverType === undefined &&
                     dragOverIndex === idx &&
                     draggedId !== item.id && (
                       <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all my-1" />
@@ -773,10 +850,8 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                       setDragOverType(null)
                       const container = e.currentTarget.parentElement as Element
                       if (container) {
-                        throttleDragOver(() => {
-                          const calculatedIndex = computeIndexFromContainer(container, e.clientY)
-                          setDragOverIndex(calculatedIndex)
-                        })
+                        const calculatedIndex = computeIndexFromContainer(container, e.clientY)
+                        setDragOverIndex(calculatedIndex)
                       }
                     }}
                     onDrop={(e) => {
@@ -791,7 +866,7 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                   </div>
                 </React.Fragment>
               ))}
-              {isAdmin && draggedId && dragOverType === null && dragOverIndex === filteredItems.length && (
+              {isAdmin && draggedId && dragOverType === undefined && dragOverIndex === filteredItems.length && (
                 <div className="h-8 bg-primary/30 rounded-lg border-4 border-dashed border-primary transition-all" />
               )}
             </div>
@@ -841,21 +916,24 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
     )
   }
 
+  // MULTI-COLUMN (original behavior)
   const typeColumns = Object.keys(itemsByType)
   const isSingleType = typeColumns.length === 1
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {isDuplicating && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }} />
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60, pointerEvents: "none" }}
+        />
       )}
 
       <div className="flex items-center justify-between mb-8" style={{ padding: "20px 40px 0px 40px" }}>
         <div className="flex items-center gap-1">
           <button
+            style={{ cursor: "pointer" }}
             onClick={() => router.push("/")}
             className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors"
-            aria-label="Back"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -866,7 +944,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           </div>
         </div>
         {isAdmin && (
-          <button onClick={() => setIsCreateItemOpen(true)} className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition">
+          <button
+            style={{ cursor: "pointer" }}
+            onClick={() => setIsCreateItemOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium hover:scale-105 transition"
+          >
             {t("admin.createItem")}
           </button>
         )}
@@ -908,8 +990,19 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
           <div className="text-foreground/60"><Loading /></div>
         </div>
       ) : (
-        <div className={`${isSingleType ? "" : "overflow-x-auto"} pb-4`} style={{ width: "100%", paddingLeft: 8 }}>
-          <div className={`flex gap-6 ${isSingleType ? "justify-center" : ""}`} style={{ minWidth: isSingleType ? "auto" : "max-content" }}>
+        <div
+          className={`${isSingleType ? "" : "overflow-x-auto"} pb-4`}
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            width: "100%",
+            paddingLeft: "20px"
+          }}
+        >
+          <div
+            className={`flex gap-6 ${isSingleType ? "justify-center" : ""}`}
+            style={{ minWidth: isSingleType ? "auto" : "max-content" }}
+          >
             {typeColumns
               .filter((type) => !filterType || type === filterType)
               .map((type) => {
@@ -920,9 +1013,10 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                   <div
                     key={type}
                     className={`${isSingleType ? "w-full max-w-4xl" : "flex-shrink-0 w-64"} space-y-4`}
-                    style={{ minWidth: isSingleType ? "auto" : "210px", width: isSingleType ? "100%" : "210px" }}
+                    style={{ minWidth: isSingleType ? "auto" : "156px", width: "160px" }}
+
                   >
-                    <div className="sticky top-0 z-10 bg-transparent p-2 rounded-md text-center">
+                    <div className="glass-strong rounded-lg p-1 sticky top-0 z-10" style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
                       {editingType === type ? (
                         <input
                           type="text"
@@ -930,34 +1024,34 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                           onChange={(e) => setEditingTypeValue(e.target.value)}
                           onBlur={handleTypeSave}
                           onKeyDown={handleTypeKeyDown}
-                          className="text-sm font-bold bg-transparent border-b-2 border-primary focus:outline-none w-full px-1"
+                          className="text-sm font-bold text-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full px-1"
                           autoFocus
                         />
                       ) : (
                         <h3
-                          className="font-bold cursor-pointer"
+                          className=" font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
                           onDoubleClick={() => handleTypeDoubleClick(type)}
                           title={isAdmin ? "Double-click to edit" : ""}
-                          style={{ fontSize: "13px", textAlign: "center" }}
-                        >
+                          style={{ fontSize: "13px", textAlign: "center" }}>
                           {type}
                         </h3>
                       )}
-                      <span className="text-xs text-foreground/60">({merged.length})</span>
+                      <span className="text-foreground/60 " style={{ fontSize: "8px" }}>({merged.length} {category?.name})</span>
                     </div>
 
                     <div
                       ref={(el) => {
                         columnsRef.current[type] = el || null
                       }}
-                      className={`space-y-3 max-h-[2000px] overflow-y-auto relative`}
+                      className={`space-y-3 max-h-[2000px] overflow-y-auto relative ${isDragging ? "overflow-y-scroll" : ""}`}
                       style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                        maxHeight: undefined,
                         WebkitOverflowScrolling: "touch",
                       }}
-                      onMouseEnter={() => {
-                        const container = columnsRef.current[type]
-                        if (container) container.scrollTop = 0
-                      }}
+                      onMouseEnter={() => onColumnMouseEnter(type)}
+                      onMouseLeave={() => onColumnMouseLeave(type)}
                       onDragOver={(e) => {
                         if (!isAdmin || !draggedId) return
                         e.preventDefault()
@@ -967,12 +1061,19 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                         const scrollThreshold = 80
                         const scrollSpeed = 12
                         if (e.clientY - rect.top < scrollThreshold) {
-                          ; (e.currentTarget as HTMLElement).scrollTop = Math.max(0, (e.currentTarget as HTMLElement).scrollTop - scrollSpeed)
+                          ; (e.currentTarget as HTMLElement).scrollTop = Math.max(
+                            0,
+                            (e.currentTarget as HTMLElement).scrollTop - scrollSpeed,
+                          )
                         } else if (rect.bottom - e.clientY < scrollThreshold) {
-                          ; (e.currentTarget as HTMLElement).scrollTop = Math.min((e.currentTarget as HTMLElement).scrollHeight - (e.currentTarget as HTMLElement).clientHeight, (e.currentTarget as HTMLElement).scrollTop + scrollSpeed)
+                          ; (e.currentTarget as HTMLElement).scrollTop = Math.min(
+                            (e.currentTarget as HTMLElement).scrollHeight -
+                            (e.currentTarget as HTMLElement).clientHeight,
+                            (e.currentTarget as HTMLElement).scrollTop + scrollSpeed,
+                          )
                         }
                         const foundIndex = computeIndexFromContainer(e.currentTarget, e.clientY)
-                        throttleDragOver(() => setDragOverIndex(foundIndex))
+                        setDragOverIndex(foundIndex)
                       }}
                       onDrop={(e) => {
                         if (!isAdmin || !draggedId || dragOverType !== type) return
@@ -987,11 +1088,18 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                       )}
 
                       {merged.map((item, idx) => {
-                        const showZone = isAdmin && draggedId && dragOverType === type && dragOverIndex === idx + 1 && draggedId !== item.id
+                        const showZone =
+                          isAdmin &&
+                          draggedId &&
+                          dragOverType === type &&
+                          dragOverIndex === idx + 1 &&
+                          draggedId !== item.id
                         return (
                           <React.Fragment key={item.id}>
                             <div data-id={item.id}>{renderItemCard(item, type, idx, false)}</div>
-                            {showZone && <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />}
+                            {showZone && (
+                              <div className="h-2 bg-primary/50 rounded-lg border-2 border-dashed border-primary transition-all" />
+                            )}
                           </React.Fragment>
                         )
                       })}
@@ -1073,7 +1181,13 @@ export function WatchServersButtons({ title }: { title?: string }) {
   return (
     <div className="flex gap-2 flex-wrap">
       {links.map((l) => (
-        <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 glass rounded-md text-sm font-medium hover:opacity-90">
+        <a
+          key={l.label}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-2 glass rounded-md text-sm font-medium hover:opacity-90"
+        >
           {l.label}
         </a>
       ))}

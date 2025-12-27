@@ -42,8 +42,8 @@ export default function CreateItemDialog({
 
   useEffect(() => {
     if (editingItem) {
-      setTitle(editingItem.title)
-      setDescription(editingItem.description)
+      setTitle(editingItem.title || "")
+      setDescription(editingItem.description || "")
       setType(editingItem.type || "")
       setImageUrl(editingItem.imageUrl || "")
       setImageFile(null)
@@ -271,6 +271,8 @@ export default function CreateItemDialog({
               placeholder="https://example.com/image.jpg"
               className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             />
+            <img src={imageUrl || " "} alt=" " className="w-10 h-10 right-0 absolute hover:w-30 hover:h-30 hover:z-50 hover:border-none hover:cursor-pointer hover:bg-white/50 hover:backdrop-blur-sm m-2 object-cover border rounded-lg" style={{ objectFit: "cover" }} />
+
             <p className="text-xs text-foreground/60 mt-1">Or upload an image below</p>
           </div>
 
@@ -278,8 +280,8 @@ export default function CreateItemDialog({
             <label className="block text-sm font-medium text-foreground mb-2">
               Upload Image <span className="text-destructive">*</span>
             </label>
-            <input type="file" accept="image/*" onChange={handleImageChange} disabled={loading} className="w-full" />
-            {imageFile && <p className="text-xs text-primary mt-2">Selected: {imageFile.name}</p>}
+            <input type="file" accept="image/*" onChange={handleImageChange} disabled={loading} className="w-full" style={{ border: "1px solid #ccc", borderRadius: "5px" }} />
+            {imageFile && <p className="text-xs text-primary mt-2"  >Selected: {imageFile.name}</p>}
           </div>
 
           <div className="flex gap-4 pt-4">

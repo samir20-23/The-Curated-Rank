@@ -211,8 +211,8 @@ export default function ItemDetailPage() {
     item?.imageUrl ||
     (omdbData?.Poster && omdbData.Poster !== "N/A" ? omdbData.Poster : (tmdbData?.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}` : null))
 
-  const plot = item?.description || omdbData?.Plot || tmdbData?.overview || "No description available"
-  const displayTitle = item?.title || "Untitled"
+  const plot = item?.description || omdbData?.Plot || tmdbData?.overview || " "
+  const displayTitle = item?.title || " "
   const director = omdbData?.Director || "N/A"
   const actors = omdbData?.Actors || "N/A"
   const genre = omdbData?.Genre || "N/A"
@@ -222,7 +222,7 @@ export default function ItemDetailPage() {
 
   // Watch server helpers
   const movieboxUrlFor = (title: string) => `https://moviebox.ph/web/searchResult?keyword=${encodeURIComponent(title)}`
-  
+
   // Convert title to slug format (lowercase, replace spaces with hyphens)
   const titleToSlug = (title: string) => {
     return title
@@ -230,13 +230,13 @@ export default function ItemDetailPage() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
   }
-  
+
   // Server URL helpers
   const getServerUrls = (title: string) => {
     const slug = titleToSlug(title)
     const encoded = encodeURIComponent(title)
     const plusSeparated = title.replace(/\s+/g, '+')
-    
+
     return {
       moviebox: movieboxUrlFor(title),
       moviesjoytv: `https://moviesjoytv.to/search/${slug}`,
@@ -245,9 +245,9 @@ export default function ItemDetailPage() {
       egydead: `https://egydead.media/?s=${plusSeparated}`
     }
   }
-  
+
   // Check if item has valid title/description for watch buttons
-  const hasValidTitle = item?.title && item.title.trim() !== "" && displayTitle !== "Untitled"
+  const hasValidTitle = item?.title && item.title.trim() !== "" && displayTitle !== " "
 
   return (
     <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative">
@@ -307,7 +307,7 @@ export default function ItemDetailPage() {
                       {rating !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rating: {rating}</span>}
                       {year !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Year: {year}</span>}
                     </div>
-                    
+
                     {/* Watch server buttons - only for movie categories and when title exists */}
                     {isMovieCategory && hasValidTitle && (() => {
                       const serverUrls = getServerUrls(item.title!)
@@ -359,7 +359,7 @@ export default function ItemDetailPage() {
                   </div>
 
                   <div>
-                    <h2 className="text-lg font-bold text-foreground mb-2">Plot</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-2">{plot.trim() !== "" ? "Plot" : " "}</h2>
                     <p className="text-foreground/80 leading-relaxed">{plot}</p>
                   </div>
 
@@ -416,13 +416,13 @@ export default function ItemDetailPage() {
                 <h2 className="text-2xl font-bold text-foreground">You might also like</h2>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "160px" }}>
                   <div className="flex flex-wrap gap-4" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      {similarMovies.map((movie: any, idx: number) => {
-                      const title = movie.title || movie.name || "Untitled"
+                    {similarMovies.map((movie: any, idx: number) => {
+                      const title = movie.title || movie.name || " "
                       const posterPath = movie.poster_path ? `https://image.tmdb.org/t/p/w300${movie.poster_path}` : null
                       const overview = movie.overview || ""
-                      const movieHasTitle = title && title !== "Untitled"
+                      const movieHasTitle = title && title !== " "
                       const movieUrls = movieHasTitle ? getServerUrls(title) : null
-                      
+
                       return (
                         <div key={`${movie.id || idx}-${idx}`} className="flex-shrink-0 w-44 sm:w-48 md:w-56 lg:w-64 glass-strong rounded-lg overflow-hidden group">
                           <div className="relative">
