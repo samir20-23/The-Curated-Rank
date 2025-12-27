@@ -219,6 +219,9 @@ export default function ItemDetailPage() {
   const rating = omdbData?.imdbRating || (tmdbData?.vote_average ? tmdbData.vote_average.toFixed(1) : "N/A")
   const year = omdbData?.Year || (tmdbData?.release_date ? tmdbData.release_date.split("-")[0] : "N/A")
   const isMovieCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("movie")
+  const isTvShowCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("Tv Shows".toLowerCase() || "TV Shows".toLowerCase())
+  const isMusicCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("music")
+
 
   // Watch server helpers
   const movieboxUrlFor = (title: string) => `https://moviebox.ph/web/searchResult?keyword=${encodeURIComponent(title)}`
@@ -249,8 +252,23 @@ export default function ItemDetailPage() {
   // Check if item has valid title/description for watch buttons
   const hasValidTitle = item?.title && item.title.trim() !== "" && displayTitle !== " "
 
+  // small ButtonLink component to keep style consistent
+  const ButtonLink = ({ href, children, leadingIcon }: { href: string, children: React.ReactNode, leadingIcon?: React.ReactNode }) => {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition transform shadow-sm backdrop-blur-sm bg-foreground/6 border border-white/6 hover:scale-105 hover:backdrop-brightness-110"
+      >
+        {leadingIcon && <span className="opacity-90">{leadingIcon}</span>}
+        <span className="truncate max-w-[10rem]">{children}</span>
+      </a>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-[rgba(0,0,0,0.5)] relative">
+    <div className="min-h-screen bg-[linear-gradient(180deg,rgba(7,10,18,0.6),rgba(8,11,20,0.8))] relative">
       <Navigation />
       <main className="container mx-auto px-4 py-6">
         {loading ? (
@@ -269,21 +287,26 @@ export default function ItemDetailPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            <button
-              onClick={() => router.back()}
-              className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors mb-4"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 glass rounded-lg hover:bg-secondary/50 transition-colors"
+                aria-label="Back"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+            </div>
 
             <div className="glass-strong rounded-xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Poster */}
-                <div>
+                <div className="md:col-span-1 flex items-start">
                   {poster ? (
-                    <img src={poster} alt={displayTitle} className=" rounded-xl shadow-2xl object-cover" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={poster} alt={displayTitle} className="w-full rounded-xl shadow-2xl object-cover max-h-[520px]" />
                   ) : (
                     <div className="w-full aspect-[2/3] bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center rounded-xl">
                       <span className="text-6xl">📌</span>
@@ -292,80 +315,62 @@ export default function ItemDetailPage() {
                 </div>
 
                 {/* Details */}
-                <div className="space-y-4">
-                  <div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{displayTitle}</h1>
-                    {categoryData && (
-                      <p className="text-foreground/60 text-base">
-                        Category: {categoryData.name}
-                        {item.type && ` • Type: ${item.type}`}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-3 mt-3 flex-wrap">
-                      <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rank: #{item.rank}</span>
-                      {rating !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rating: {rating}</span>}
-                      {year !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Year: {year}</span>}
-                    </div>
-
-                    {/* Watch server buttons - only for movie categories and when title exists */}
-                    {isMovieCategory && hasValidTitle && (() => {
-                      const serverUrls = getServerUrls(item.title!)
-                      return (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          <a
-                            href={serverUrls.moviebox}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                          >
-                            Watch on MovieBox
-                          </a>
-                          <a
-                            href={serverUrls.moviesjoytv}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-blue-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                          >
-                            MoviesJoy
-                          </a>
-                          <a
-                            href={serverUrls.sflix}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-purple-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                          >
-                            SFlix
-                          </a>
-                          <a
-                            href={serverUrls.flixer}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-green-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                          >
-                            Flixer
-                          </a>
-                          <a
-                            href={serverUrls.egydead}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-orange-500/90 text-white rounded-lg text-sm font-semibold hover:scale-105 transition transform"
-                          >
-                            EgyDead
-                          </a>
-                        </div>
-                      )
-                    })()}
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex-1">
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">{displayTitle}</h1>
+                    {categoryData && <p className="text-foreground/60 text-sm">Category: {categoryData.name}{item.type && ` • Type: ${item.type}`}</p>}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rank: #{item.rank} in list  {item.type && ` • ${item.type}`}</span>
+                    {rating !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Rating: {rating}</span>}
+                    {year !== "N/A" && <span className="px-3 py-1 glass rounded-lg text-sm font-medium">Year: {year}</span>}
                   </div>
 
-                  <div>
+                  {/* Music buttons (only for music category) */}
+                  {isMusicCategory && hasValidTitle && (() => {
+                    const title = item.title!
+                    const encoded = encodeURIComponent(title)
+                    const plus = title.replace(/\s+/g, "+")
+                    return (
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        <ButtonLink href={`https://soundcloud.com/search?q=${encoded}`} leadingIcon={<span>🎧</span>}>
+                          SoundCloud
+                        </ButtonLink>
+                        <ButtonLink href={`https://open.spotify.com/search/${encoded}`} leadingIcon={<span>🎵</span>}>
+                          Spotify
+                        </ButtonLink>
+                        <ButtonLink href={`https://www.youtube.com/results?search_query=${plus}`} leadingIcon={<span>▶️</span>}>
+                          YouTube
+                        </ButtonLink>
+                        <ButtonLink href={`https://www.google.com/search?q=${encoded}`} leadingIcon={<span>🔎</span>}>
+                          Web Search
+                        </ButtonLink>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Watch server buttons - only for movie categories and when title exists */}
+                  {isMovieCategory || isTvShowCategory && hasValidTitle && (() => {
+                    const serverUrls = getServerUrls(item.title!)
+                    return (
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        <ButtonLink href={serverUrls.moviebox} leadingIcon={<span>▶️</span>}>MovieBox</ButtonLink>
+                        <ButtonLink href={serverUrls.moviesjoytv} leadingIcon={<span>🎬</span>}>MoviesJoy</ButtonLink>
+                        <ButtonLink href={serverUrls.sflix} leadingIcon={<span>📺</span>}>SFlix</ButtonLink>
+                        <ButtonLink href={serverUrls.flixer} leadingIcon={<span>🔎</span>}>Flixer</ButtonLink>
+                        <ButtonLink href={serverUrls.egydead} leadingIcon={<span>📰</span>}>EgyDead</ButtonLink>
+                      </div>
+                    )
+                  })()}
+
+                  <div className="mt-4">
                     <h2 className="text-lg font-bold text-foreground mb-2">{plot.trim() !== "" ? "Plot" : " "}</h2>
                     <p className="text-foreground/80 leading-relaxed">{plot}</p>
                   </div>
 
                   {/* Trailer */}
                   {trailer && (
-                    <div>
+                    <div className="mt-4">
                       <h2 className="text-lg font-bold text-foreground mb-2">Trailer</h2>
                       <div className="aspect-video rounded-lg overflow-hidden">
                         <iframe src={`https://www.youtube.com/embed/${trailer}`} className="w-full h-full" allowFullScreen title="Trailer" />
@@ -373,7 +378,7 @@ export default function ItemDetailPage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     {director !== "N/A" && (
                       <div>
                         <h3 className="text-sm font-medium text-foreground/60 mb-1">Director</h3>
@@ -434,14 +439,14 @@ export default function ItemDetailPage() {
                                 <span className="text-3xl">🎬</span>
                               </div>
                             )}
-                            {isMovieCategory && movieHasTitle && movieUrls && (
+                            {isTvShowCategory && movieHasTitle && movieUrls && (
                               <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-1">
                                 <a
                                   href={movieUrls.moviebox}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex-1 px-2 py-1 bg-primary/90 text-primary-foreground rounded-md text-xs font-medium text-center hover:bg-primary transition"
+                                  className="flex-1 px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition"
                                 >
                                   MovieBox
                                 </a>
@@ -450,7 +455,7 @@ export default function ItemDetailPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex-1 px-2 py-1 bg-blue-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-blue-500 transition"
+                                  className="flex-1 px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition"
                                 >
                                   MoviesJoy
                                 </a>
@@ -459,7 +464,7 @@ export default function ItemDetailPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex-1 px-2 py-1 bg-purple-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-purple-500 transition"
+                                  className="flex-1 px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition"
                                 >
                                   SFlix
                                 </a>
@@ -468,7 +473,7 @@ export default function ItemDetailPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex-1 px-2 py-1 bg-green-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-green-500 transition"
+                                  className="flex-1 px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition"
                                 >
                                   Flixer
                                 </a>
@@ -477,7 +482,7 @@ export default function ItemDetailPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex-1 px-2 py-1 bg-orange-500/90 text-white rounded-md text-xs font-medium text-center hover:bg-orange-500 transition"
+                                  className="flex-1 px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition"
                                 >
                                   EgyDead
                                 </a>
@@ -498,13 +503,12 @@ export default function ItemDetailPage() {
               </div>
             )}
 
-
-            {/* if no similar movies and item exists -> show random picks from popular as fallback */}
             {!similarMovies.length && (
               <div className="text-center py-8 text-foreground/60">No suggestions available</div>
             )}
           </div>
-        )}
+        )
+        }
       </main>
       <Footer />
     </div>
