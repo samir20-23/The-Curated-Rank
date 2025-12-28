@@ -7,12 +7,14 @@ import Footer from "@/components/footer"
 import RandomItemsScroll from "@/components/random-items-scroll"
 import CategoryCharts from "@/components/category-charts"
 import SocialPostsScroll from "@/components/social-posts-scroll"
+import Loading from "@/components/loading"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-[rgba(0,0,0,0.5)]  relative" >
       <Navigation />
       <Hero />
+      {/* <Loading /> */}
       <main className="container mx-auto px-4  " style={{ paddingTop: "15px" }}>
         <CategoriesGrid />
       </main>

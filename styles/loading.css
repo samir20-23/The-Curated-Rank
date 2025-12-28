@@ -1,12 +1,12 @@
 .loading-container {
     top: 50%;
-    left: 47%;
+    left: 46%;
 }
 
 @media (max-width: 768px) {
     .loading-container {
-        left: 33%;
-        top: 33%;
+        left: 38%;
+        top: 40%;
     }
 }
 
@@ -101,7 +101,21 @@
     position: relative;
     width: 96px;
     height: 96px;
-    transform: rotate(45deg);
+    animation: loaderr 50s linear infinite;
+}
+
+@keyframes loaderr {
+    0% {
+        transform: rotate(45deg);
+    }
+
+    50% {
+        transform: rotate(-45deg);
+    }
+
+    100% {
+        transform: rotate(45deg);
+    }
 }
 
 .loaderr-squaree {
