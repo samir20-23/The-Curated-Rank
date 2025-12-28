@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useFirebaseSocialLinks } from "@/hooks/use-firebase-social-links"
 import SocialLinkDialog from "@/components/admin/social-link-dialog"
+import OptimizedImage from "@/components/optimized-image"
 import {
   Accordion,
   AccordionContent,
@@ -172,14 +173,17 @@ export default function Footer() {
 
 
                   {link.iconUrl ? (
-                    <img
+                    <OptimizedImage
                       src={link.iconUrl}
                       alt={link.name}
+                      width={30}
+                      height={30}
                       className="glass-strong cursor-pointer opacity-96 hover:opacity-100 hover:animate-pulse duration-500 ease-in-out transition-all duration-100 ease-in-out hover:scale-120 transition-transform"
                       style={{
                         borderRadius: "300px",
                         maxWidth: "30px",
                       }}
+                      sizes="30px"
                     />
                   ) : (
                     <span className="text-xs">{link.name}</span>
@@ -246,11 +250,18 @@ export default function Footer() {
                       className="px-3 py-2 glass rounded-lg text-foreground hover:bg-secondary/30 transition-colors text-sm"
                       title={key.replace(/_/g, " ")}
                     >
-                      <img src={iconMap[key]} alt="" className="glass-strong cursor-pointer opacity-96 hover:opacity-100 animate-pulse duration-500 ease-in-out transition-all duration-100 ease-in-out hover:scale-120 transition-transform"
+                      <OptimizedImage
+                        src={iconMap[key]}
+                        alt=""
+                        width={30}
+                        height={30}
+                        className="glass-strong cursor-pointer opacity-96 hover:opacity-100 animate-pulse duration-500 ease-in-out transition-all duration-100 ease-in-out hover:scale-120 transition-transform"
                         style={{
                           borderRadius: "300px",
                           maxWidth: "30px"
-                        }} />
+                        }}
+                        sizes="30px"
+                      />
                     </a>
                   )
                 })}

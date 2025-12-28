@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import { db } from "@/lib/firebase"
 import { collection, query, where, getDocs } from "firebase/firestore"
+import OptimizedImage from "@/components/optimized-image"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -197,7 +198,18 @@ export default function CategoryCharts() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-800 flex items-center justify-center">
-                    {cat.imageUrl ? <img src={cat.imageUrl} alt={cat.name} className="w-full h-full object-cover" /> : <div>📁</div>}
+                    {cat.imageUrl ? (
+                      <OptimizedImage
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                        sizes="40px"
+                      />
+                    ) : (
+                      <div>📁</div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="text-sm text-foreground/70">Category</div>

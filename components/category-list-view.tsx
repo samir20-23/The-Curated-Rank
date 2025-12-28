@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import CreateItemDialog from "@/components/admin/create-item-dialog"
 import DeleteConfirmation from "@/components/admin/delete-confirmation"
+import OptimizedImage from "@/components/optimized-image"
 import type { Item } from "@/lib/types"
 import Loading from "./loading"
 import "./list.css"
@@ -466,19 +467,16 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
             }}
           >
             {item.imageUrl ? (
-              <img
+              <OptimizedImage
                 src={item.imageUrl}
                 alt={item.title || `Item ${item.rank}`}
+                width={imageSize}
+                height={imageSize}
                 className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
-                draggable={false}
                 style={{ objectFit: "cover", width: `${imageSize}px`, height: `${imageSize}px` }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ minHeight: `${imageSize}px` }}>
-                <span className="text-2xl">📌</span>
-              </div>
+              " "
             )}
           </div>
 
@@ -639,21 +637,19 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
 
           </div>
 
-          <div className="w-full overflow-hidden rounded" style={{ pointerEvents: "none" }} onClick={() => router.push(`/item/${item.id}`)}>
+          <div className=" overflow-hidden rounded relative" style={{ pointerEvents: "none", minHeight: "100px" }} onClick={() => router.push(`/item/${item.id}`)}>
             {item.imageUrl ? (
-              <img
+              <OptimizedImage
                 src={item.imageUrl}
                 alt={item.title || `Item ${item.rank}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
-                draggable={false}
-                style={{ pointerEvents: "none", objectFit: "cover" }}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 300px"
+                style={{ pointerEvents: "none", objectFit: "cover"      }}
+                
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center" style={{ minHeight: "35px", pointerEvents: "none" }}>
-                <span className="text-base">📌</span>
-              </div>
+           " "
             )}
           </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
+import OptimizedImage from "@/components/optimized-image"
 import type { Item } from "@/lib/types"
 
 export default function RandomItemsScroll() {
@@ -73,13 +74,15 @@ export default function RandomItemsScroll() {
             <div
               key={`${item.id}-${index}`}
               onClick={() => router.push(`/item/${item.id}`)}
-              className="flex-shrink-0 w-32 h-48 glass-strong rounded-lg overflow-hidden cursor-pointer opacity-20 hover:opacity-100 hover:z-10 animate-pulse duration-500 ease-in-out group group-hover:opacity-100 transition-all duration-100 ease-in-out  hover:scale-90 transition-transform"
+              className="flex-shrink-0 w-32 h-48 glass-strong rounded-lg overflow-hidden cursor-pointer opacity-20 hover:opacity-100 hover:z-10 animate-pulse duration-500 ease-in-out group group-hover:opacity-100 transition-all duration-100 ease-in-out  hover:scale-90 transition-transform relative"
             >
               {item.imageUrl ? (
-                <img
+                <OptimizedImage
                   src={item.imageUrl}
                   alt={item.title ?? ""}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="128px"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">

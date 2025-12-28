@@ -6,6 +6,7 @@ import { uploadImage } from "@/lib/supabase"
 import { useFirebaseItems } from "@/hooks/use-firebase-items"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import { useLanguage } from "@/contexts/language-context"
+import OptimizedImage from "@/components/optimized-image"
 import type { Item } from "@/lib/types"
 
 interface CreateItemDialogProps {
@@ -96,11 +97,11 @@ export default function CreateItemDialog({
       const finalType = newType.trim() || type
 
       // If category has types, require selecting/creating one
-      if ((availableTags.length > 0) && !finalType) {
-        setError("Please select a type or create a new one.")
-        setLoading(false)
-        return
-      }
+      // if ((availableTags.length > 0) && !finalType) {
+      //   setError("Please select a type or create a new one.")
+      //   setLoading(false)
+      //   return
+      // }
 
       // If new type is provided and not in available tags, add it to category tags
       if (newType.trim() && category && !availableTags.includes(newType.trim())) {
@@ -271,7 +272,17 @@ export default function CreateItemDialog({
               placeholder="https://example.com/image.jpg"
               className="w-full px-4 py-2 glass rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             />
-            <img src={imageUrl || " "} alt=" " className="w-10 h-10 right-0 absolute hover:w-30 hover:h-30 hover:z-50 hover:border-none hover:cursor-pointer hover:bg-white/50 hover:backdrop-blur-sm m-2 object-cover border rounded-lg" style={{ objectFit: "cover" }} />
+            {imageUrl && imageUrl.trim() !== " " && (
+              <OptimizedImage
+                src={imageUrl}
+                alt="Preview"
+                width={40}
+                height={40}
+                className="w-10 h-10 right-0 absolute hover:w-30 hover:h-30 hover:z-50 hover:border-none hover:cursor-pointer hover:bg-white/50 hover:backdrop-blur-sm m-2 object-cover border rounded-lg"
+                style={{ objectFit: "cover" }}
+                sizes="40px"
+              />
+            )}
 
             <p className="text-xs text-foreground/60 mt-1">Or upload an image below</p>
           </div>

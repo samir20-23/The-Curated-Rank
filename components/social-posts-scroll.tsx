@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useFirebaseSocialPosts } from "@/hooks/use-firebase-social-posts"
 import SocialPostDialog from "@/components/admin/social-post-dialog"
+import OptimizedImage from "@/components/optimized-image"
 import type { SocialPost } from "@/lib/types"
 
 export default function SocialPostsScroll() {
@@ -66,10 +67,12 @@ export default function SocialPostsScroll() {
 
                     {post.imageUrl ? (
                       <div className="relative w-full h-full">
-                        <img
+                        <OptimizedImage
                           src={post.imageUrl}
                           alt={post.title || "Social post"}
-                          className="  object-cover  "
+                          fill
+                          className="object-cover"
+                          sizes="256px"
                         />
                         {(post.title || post.description) && (
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4">
@@ -167,10 +170,12 @@ export default function SocialPostsScroll() {
                   >
                     {post.imageUrl ? (
                       <div className="relative w-full h-full">
-                        <img
+                        <OptimizedImage
                           src={post.imageUrl}
                           alt={post.title || "Social post"}
-                          className="  object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="256px"
                         />
                         {(post.title || post.description) && (
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4 ">

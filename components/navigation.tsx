@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
@@ -53,7 +54,7 @@ export default function Navigation() {
           className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity"
         >
           <div style={{ display: "flex", gap: "12px", fontSize: "19px", justifyContent: "center", alignItems: "center", zIndex: 1 }} >
-            <img src="/icon.svg" className="w-10 h-10" />
+            <Image src="/icon.svg" alt="Logo" width={40} height={40} className="w-10 h-10" priority />
             <div className="w-31 h-5   z-0 left-32 dark:bg-[rgb(48, 41, 56)]  bg-[rgba(0, 0, 0, 0.16)]" style={{ position: 'absolute', borderRadius: "5px", filter: "blur(4px)" }}></div>
             {/* rgb(48, 41, 56) */}
             <p className="bg-gradient-to-r from-[#f3f4f6] to-[#1E293B] bg-clip-text text-transparent " style={{ zIndex: 2 }}>

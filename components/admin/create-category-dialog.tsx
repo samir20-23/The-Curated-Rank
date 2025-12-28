@@ -168,7 +168,7 @@ export default function CreateCategoryDialog({ isOpen, onClose, editingCategory 
       onClick={handleBackdropClick}
     >
       <div
-        className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
+        className="glass-strong rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto" 
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-bold text-foreground mb-6">

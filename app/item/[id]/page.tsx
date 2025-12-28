@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
+import OptimizedImage from "@/components/optimized-image"
 import { useFirebaseCategories } from "@/hooks/use-firebase-categories"
 import { db } from "@/lib/firebase"
 import { doc, getDoc } from "firebase/firestore"
@@ -305,8 +306,15 @@ export default function ItemDetailPage() {
                 {/* Poster */}
                 <div className="md:col-span-1 flex items-start">
                   {poster ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={poster} alt={displayTitle} className="w-full rounded-xl shadow-2xl object-cover max-h-[520px]" />
+                    <OptimizedImage
+                      src={poster}
+                      alt={displayTitle}
+                      width={400}
+                      height={600}
+                      className="w-full rounded-xl shadow-2xl object-cover max-h-[520px]"
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      priority
+                    />
                   ) : (
                     <div className="w-full aspect-[2/3] bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center rounded-xl">
                       <span className="text-6xl">📌</span>
@@ -408,8 +416,16 @@ export default function ItemDetailPage() {
                 <h2 className="text-lg font-bold mb-3">Gallery</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {backdrops.map((b, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={i} src={b} alt={`Backdrop ${i + 1}`} className="w-full h-36 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open(b, "_blank")} />
+                    <OptimizedImage
+                      key={i}
+                      src={b}
+                      alt={`Backdrop ${i + 1}`}
+                      width={300}
+                      height={144}
+                      className="w-full h-36 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      onClick={() => window.open(b, "_blank")}
+                    />
                   ))}
                 </div>
               </div>
@@ -430,10 +446,15 @@ export default function ItemDetailPage() {
 
                       return (
                         <div key={`${movie.id || idx}-${idx}`} className="flex-shrink-0 w-44 sm:w-48 md:w-56 lg:w-64 glass-strong rounded-lg overflow-hidden group">
-                          <div className="relative">
+                          <div className="relative w-full" style={{ aspectRatio: "2/3" }}>
                             {posterPath ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={posterPath} alt={title} className="w-full h-56 object-cover" />
+                              <OptimizedImage
+                                src={posterPath}
+                                alt={title}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 640px) 176px, (max-width: 768px) 192px, 224px"
+                              />
                             ) : (
                               <div className="w-full h-56 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
                                 <span className="text-3xl">🎬</span>
