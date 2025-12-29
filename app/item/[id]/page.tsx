@@ -219,7 +219,7 @@ export default function ItemDetailPage() {
   const genre = omdbData?.Genre || "N/A"
   const rating = omdbData?.imdbRating || (tmdbData?.vote_average ? tmdbData.vote_average.toFixed(1) : "N/A")
   const year = omdbData?.Year || (tmdbData?.release_date ? tmdbData.release_date.split("-")[0] : "N/A")
-  const isMovieCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("movie")
+  const isMovieCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("movies")
   const isTvShowCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("Tv Shows".toLowerCase() || "TV Shows".toLowerCase())
   const isMusicCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("music")
 
@@ -311,7 +311,7 @@ export default function ItemDetailPage() {
                       alt={displayTitle}
                       width={400}
                       height={600}
-                      className="w-full rounded-xl shadow-2xl object-cover max-h-[520px]"
+                      className="w-full rounded-xl shadow-2xl object-cover max-h-[190px] max-w-[190px] md:max-w-[200px] md:max-h-[520px]"
                       sizes="(max-width: 768px) 100vw, 400px"
                       priority
                     />
@@ -357,16 +357,15 @@ export default function ItemDetailPage() {
                     )
                   })()}
 
-                  {/* Watch server buttons - only for movie categories and when title exists */}
-                  {isMovieCategory || isTvShowCategory && hasValidTitle && (() => {
+                  {(isTvShowCategory || isMovieCategory) && hasValidTitle && (() => {
                     const serverUrls = getServerUrls(item.title!)
                     return (
-                      <div className="flex flex-wrap gap-3 mt-4">
-                        <ButtonLink href={serverUrls.moviebox} leadingIcon={<span>▶️</span>}>MovieBox</ButtonLink>
-                        <ButtonLink href={serverUrls.moviesjoytv} leadingIcon={<span>🎬</span>}>MoviesJoy</ButtonLink>
-                        <ButtonLink href={serverUrls.sflix} leadingIcon={<span>📺</span>}>SFlix</ButtonLink>
-                        <ButtonLink href={serverUrls.flixer} leadingIcon={<span>🔎</span>}>Flixer</ButtonLink>
-                        <ButtonLink href={serverUrls.egydead} leadingIcon={<span>📰</span>}>EgyDead</ButtonLink>
+                      <div className=" px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition flex flex-wrap gap-3 mt-4">
+                        <ButtonLink href={serverUrls.moviebox} leadingIcon={<span><OptimizedImage src="/logos/movieBox.png" alt="MovieBox" width={20} height={20} /></span>}>MovieBox</ButtonLink>
+                        <ButtonLink href={serverUrls.moviesjoytv} leadingIcon={<span><OptimizedImage src="/logos/moviesJoy.png" alt="MoviesJoy" width={30} height={30} /></span>}>MoviesJoy</ButtonLink>
+                        <ButtonLink href={serverUrls.sflix} leadingIcon={<span><OptimizedImage src="/logos/sFlix.png" alt="SFlix" width={30} height={30} /></span>}>SFlix</ButtonLink>
+                        <ButtonLink href={serverUrls.flixer} leadingIcon={<span><OptimizedImage src="/logos/flixer.png" alt="Flixer" width={60} height={50} /></span>}> </ButtonLink>
+                        <ButtonLink href={serverUrls.egydead} leadingIcon={<span><OptimizedImage src="/logos/egydead.png" alt="EgyDead" width={60} height={50} /></span>}> </ButtonLink>
                       </div>
                     )
                   })()}
@@ -422,7 +421,7 @@ export default function ItemDetailPage() {
                       alt={`Backdrop ${i + 1}`}
                       width={300}
                       height={144}
-                      className="w-full h-36 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform"
+                      className="w-full md:h-36 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform"
                       sizes="(max-width: 768px) 50vw, 25vw"
                       onClick={() => window.open(b, "_blank")}
                     />
@@ -447,6 +446,7 @@ export default function ItemDetailPage() {
                       return (
                         <div key={`${movie.id || idx}-${idx}`} className="flex-shrink-0 w-44 sm:w-48 md:w-56 lg:w-64 glass-strong rounded-lg overflow-hidden group">
                           <div className="relative w-full" style={{ aspectRatio: "2/3" }}>
+
                             {posterPath ? (
                               <OptimizedImage
                                 src={posterPath}
@@ -460,7 +460,7 @@ export default function ItemDetailPage() {
                                 <span className="text-3xl">🎬</span>
                               </div>
                             )}
-                            {isTvShowCategory && movieHasTitle && movieUrls && (
+                            {movieUrls && (
                               <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-1">
                                 <a
                                   href={movieUrls.moviebox}

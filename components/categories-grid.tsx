@@ -80,8 +80,7 @@ export default function CategoriesGrid({ selectedCategory, onCategorySelect }: C
         </div>
       ) : (
         <div
-          className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}
-        >
+          className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
           {categories.map((category) => (
             <div key={category.id} draggable={isAdmin}
               onDragStart={(e) => { if (!isAdmin) return; e.dataTransfer?.setData("text/plain", category.id) }}

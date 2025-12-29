@@ -4,7 +4,7 @@ import OptimizedImage from "@/components/optimized-image"
 export default function Loading() {
     return (
         <div className="loading-container" style={{ position: "fixed", zIndex: 9999, width: "100%" }}>
-            <div className="loaderr">
+            {/* <div className="loaderr">
                 {[1, 2, 3, 4, 5, 1, 2, 3, 4].map((n, i) => (
                     <OptimizedImage
                         key={i}
@@ -13,7 +13,7 @@ export default function Loading() {
                         className="loaderr-squaree"
                     />
                 ))}
-            </div>
+            </div> */}
             {/* <div className="loaderr">
                 <div className="loaderr-squaree" style={{ backgroundImage: "url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0fuh0v8nhzonJNIbXPfzfVNAW99AO8onvRQ&s)" }}></div>
                 <div className="loaderr-squaree" style={{ backgroundImage: "url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRimEHbz4Blzqgcu0-qbS9jHLEKoeuxb7VwXg&s)" }}></div>
