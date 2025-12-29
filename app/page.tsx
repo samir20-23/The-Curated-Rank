@@ -15,7 +15,7 @@ export default function Home() {
       <Navigation />
       <Hero />
       {/* <Loading /> */}
-      <main className="container mx-auto px-4  " style={{ paddingTop: "15px" }}>
+      <main className="container mx-auto px-4  " style={{ padding: "25px" }}>
         <CategoriesGrid />
       </main>
 
