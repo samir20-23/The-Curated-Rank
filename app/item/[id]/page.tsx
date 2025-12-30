@@ -457,7 +457,7 @@ export default function ItemDetailPage() {
                               />
                             ) : (
                               <div className="w-full h-56 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                                <span className="text-3xl">🎬</span>
+                                <span className="text-3xl"><img src="https://img.freepik.com/premium-photo/film-texture-overlay_926199-4121784.jpg?semt=ais_hybrid&w=740&q=80" alt="🎬" /></span>
                               </div>
                             )}
                             {movieUrls && (

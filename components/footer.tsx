@@ -14,7 +14,30 @@ import {
 } from "@/components/ui/accordion"
 import type { SocialLink } from "@/lib/types"
 import SplitText from "./SplitText";
+import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 
+export function DottedGlowBackgroundDemo() {
+  return (
+    <DottedGlowBackground
+      className="pointer-events-none mask-radial-to-90% mask-radial-at-center"
+      opacity={1}
+      gap={10}
+      radius={1.6}
+      colorLightVar="--color-neutral-500"
+      glowColorLightVar="--color-neutral-600"
+      colorDarkVar="--color-neutral-500"
+      glowColorDarkVar="--color-sky-800"
+      backgroundOpacity={0}
+      speedMin={0.3}
+      speedMax={1.6}
+      speedScale={1}
+    />
+  );
+}
+{/* SHOW IT HERE */ }
+//  <div className="flex justify-center py-10 opacity-[0.5]" >
+//         <DottedGlowBackgroundDemo />
+//       </div>
 export default function Footer() {
   const { t, language } = useLanguage()
   const { isAdmin } = useAuth()
@@ -23,8 +46,8 @@ export default function Footer() {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<SocialLink | null>(null)
   const handleAnimationComplete = () => {
-  console.log('All letters have animated!');
-};
+    console.log('All letters have animated!');
+  };
   useEffect(() => {
     fetch("/links.json")
       .then((res) => res.json())
@@ -50,15 +73,18 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-24 border-t border-border/20">
+      <div className="flex justify-center py-10 opacity-[0.5]" >
+        <DottedGlowBackgroundDemo />
+      </div>
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 ">
           <div>
             <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-3">
               MarwanRank
             </h3>
-            <div className="text-foreground/70 text-sm"> 
-                <SplitText
-                text="Discover expertly curated content across all your favorite categories." 
+            <div className="text-foreground/70 text-sm">
+              <SplitText
+                text="Discover expertly curated content across all your favorite categories."
                 delay={100}
                 duration={0.6}
                 ease="power3.out"
@@ -204,7 +230,7 @@ export default function Footer() {
                 </a>
                 {isAdmin && (
                   <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation()

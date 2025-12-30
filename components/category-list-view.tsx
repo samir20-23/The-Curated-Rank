@@ -645,11 +645,11 @@ export default function CategoryListView({ categoryId }: CategoryListViewProps) 
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 300px"
-                style={{ pointerEvents: "none", objectFit: "cover"      }}
-                
+                style={{ pointerEvents: "none", objectFit: "cover" }}
+
               />
             ) : (
-           " "
+              " "
             )}
           </div>
 
