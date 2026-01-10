@@ -53,6 +53,11 @@ export default function ItemDetailPage() {
   const [trailer, setTrailer] = useState<string | null>(null)
   const [backdrops, setBackdrops] = useState<string[]>([])
   const [similarMovies, setSimilarMovies] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searching, setSearching] = useState<boolean>(false)
+  const [selectedMovie, setSelectedMovie] = useState<any | null>(null)
+  const [selectedOmdb, setSelectedOmdb] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -207,18 +212,115 @@ export default function ItemDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item, categoryData])
 
+  // Debounced TMDB search when user types in the details search input
+  useEffect(() => {
+    const controller = new AbortController()
+    let timeout: any = null
+
+    const doSearch = async (q: string) => {
+      if (!q || q.trim().length < 2) {
+        setSearchResults([])
+        setSearching(false)
+        return
+      }
+      setSearching(true)
+      try {
+        const url = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&query=${encodeURIComponent(q)}&language=en-US&page=1`
+        const resp = await fetch(url, { signal: controller.signal })
+        if (!resp.ok) {
+          setSearchResults([])
+        } else {
+          const json = await resp.json()
+          setSearchResults((json.results || []).slice(0, 12))
+        }
+      } catch (err) {
+        if ((err as any).name !== 'AbortError') console.error(err)
+      } finally {
+        setSearching(false)
+      }
+    }
+
+    if (searchQuery && searchQuery.trim().length >= 2) {
+      timeout = setTimeout(() => doSearch(searchQuery.trim()), 350)
+    } else {
+      setSearchResults([])
+      setSearching(false)
+    }
+
+    return () => {
+      controller.abort()
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [searchQuery])
+
+  // Fetch TMDB detail for a selected search result and also try OMDb
+  const selectSearchResult = async (movie: any) => {
+    try {
+      setSelectedMovie(null)
+      setSelectedOmdb(null)
+      const movieId = movie.id
+      const tmdbDetailUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${tmdbKey}&append_to_response=videos,images&language=en-US&include_image_language=en,null`
+      const resp = await fetch(tmdbDetailUrl)
+      if (resp.ok) {
+        const json = await resp.json()
+        setSelectedMovie(json)
+
+        // trailer
+        const trailerVideo = json.videos?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")
+        if (trailerVideo) setTrailer(trailerVideo.key)
+        // backdrops
+        if (Array.isArray(json.images?.backdrops)) {
+          const urls = json.images.backdrops.slice(0, 10).map((b: any) => `https://image.tmdb.org/t/p/w500${b.file_path}`).filter(Boolean)
+          setBackdrops(urls)
+        }
+
+        // similar
+        try {
+          const similarUrl = `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${tmdbKey}&language=en-US&page=1`
+          const similarResp = await fetch(similarUrl)
+          if (similarResp.ok) {
+            const similarJson = await similarResp.json()
+            setSimilarMovies((similarJson.results || []).slice(0, 20))
+          } else {
+            setSimilarMovies([])
+          }
+        } catch {
+          setSimilarMovies([])
+        }
+
+        // try OMDb for extra metadata
+        try {
+          const maybeTitle = json.title || movie.title || ''
+          const omdbUrl = `https://www.omdbapi.com/?apikey=${omdbKey}&t=${encodeURIComponent(maybeTitle)}&type=movie`
+          const omdbResp = await fetch(omdbUrl)
+          if (omdbResp.ok) {
+            const omdbJson = await omdbResp.json()
+            if (omdbJson.Response === "True") setSelectedOmdb(omdbJson)
+          }
+        } catch { }
+      }
+    } catch (err) {
+      console.error('selectSearchResult error', err)
+    }
+    // clear search results after selection
+    setSearchResults([])
+    setSearchQuery("")
+  }
+
   // helpers
   const poster =
-    item?.imageUrl ||
-    (omdbData?.Poster && omdbData.Poster !== "N/A" ? omdbData.Poster : (tmdbData?.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}` : null))
+    (selectedOmdb?.Poster && selectedOmdb.Poster !== "N/A") ? selectedOmdb.Poster :
+      (selectedMovie?.poster_path ? `https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}` :
+        item?.imageUrl ||
+        (omdbData?.Poster && omdbData.Poster !== "N/A" ? omdbData.Poster : (tmdbData?.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}` : null)))
 
-  const plot = item?.description || omdbData?.Plot || tmdbData?.overview || " "
-  const displayTitle = item?.title || " "
-  const director = omdbData?.Director || "N/A"
-  const actors = omdbData?.Actors || "N/A"
-  const genre = omdbData?.Genre || "N/A"
-  const rating = omdbData?.imdbRating || (tmdbData?.vote_average ? tmdbData.vote_average.toFixed(1) : "N/A")
-  const year = omdbData?.Year || (tmdbData?.release_date ? tmdbData.release_date.split("-")[0] : "N/A")
+  const plot = selectedMovie?.overview || item?.description || selectedOmdb?.Plot || omdbData?.Plot || tmdbData?.overview || " "
+  const displayTitle = selectedMovie?.title || item?.title || " "
+  const director = selectedOmdb?.Director || omdbData?.Director || "N/A"
+  const actors = selectedOmdb?.Actors || omdbData?.Actors || "N/A"
+  const genre = selectedOmdb?.Genre || omdbData?.Genre || "N/A"
+  const rating = selectedOmdb?.imdbRating || omdbData?.imdbRating || (selectedMovie?.vote_average ? selectedMovie.vote_average.toFixed(1) : (tmdbData?.vote_average ? tmdbData.vote_average.toFixed(1) : "N/A"))
+  const year = selectedOmdb?.Year || omdbData?.Year || (selectedMovie?.release_date ? selectedMovie.release_date.split("-")[0] : (tmdbData?.release_date ? tmdbData.release_date.split("-")[0] : "N/A"))
   const isMovieCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("movies")
   const isTvShowCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("Tv Shows".toLowerCase() || "TV Shows".toLowerCase())
   const isMusicCategory = !!categoryData?.name && String(categoryData.name).toLowerCase().includes("music")
@@ -250,8 +352,8 @@ export default function ItemDetailPage() {
     }
   }
 
-  // Check if item has valid title/description for watch buttons
-  const hasValidTitle = item?.title && item.title.trim() !== "" && displayTitle !== " "
+  // Check if current display title is valid for watch buttons
+  const hasValidTitle = !!displayTitle && displayTitle.trim() !== "" && displayTitle !== " "
 
   // small ButtonLink component to keep style consistent
   const ButtonLink = ({ href, children, leadingIcon }: { href: string, children: React.ReactNode, leadingIcon?: React.ReactNode }) => {
@@ -305,6 +407,7 @@ export default function ItemDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Poster */}
                 <div className="md:col-span-1 flex items-start">
+
                   {poster ? (
                     <OptimizedImage
                       src={poster}
@@ -326,6 +429,7 @@ export default function ItemDetailPage() {
                 <div className="md:col-span-2 space-y-4">
                   <div className="flex-1">
                     <h1 className="text-2xl md:text-3xl font-bold text-foreground">{displayTitle}</h1>
+
                     {categoryData && <p className="text-foreground/60 text-sm">Category: {categoryData.name}{item.type && ` • Type: ${item.type}`}</p>}
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
@@ -336,7 +440,7 @@ export default function ItemDetailPage() {
 
                   {/* Music buttons (only for music category) */}
                   {isMusicCategory && hasValidTitle && (() => {
-                    const title = item.title!
+                    const title = displayTitle
                     const encoded = encodeURIComponent(title)
                     const plus = title.replace(/\s+/g, "+")
                     return (
@@ -358,7 +462,7 @@ export default function ItemDetailPage() {
                   })()}
 
                   {(isTvShowCategory || isMovieCategory) && hasValidTitle && (() => {
-                    const serverUrls = getServerUrls(item.title!)
+                    const serverUrls = getServerUrls(displayTitle)
                     return (
                       <div className=" px-2 py-1 glass rounded-md text-xs font-medium text-center hover:scale-105 transition flex flex-wrap gap-3 mt-4">
                         <ButtonLink href={serverUrls.moviebox} leadingIcon={<span><OptimizedImage src="/logos/movieBox.png" alt="MovieBox" width={20} height={20} /></span>}>MovieBox</ButtonLink>
@@ -433,8 +537,46 @@ export default function ItemDetailPage() {
             {/* Similar / Random Movies horizontal carousel (responsive) */}
             {similarMovies.length > 0 && (
               <div className="space-y-3 mt-8">
-                <h2 className="text-2xl font-bold text-foreground">You might also like</h2>
+                <h2 className="text-2xl font-bold text-foreground">You might also like  </h2>
+                {/* Search input for querying the APIs and selecting a different movie to preview */}
+                <div>
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search movies, e.g. Interstellar or No Country for Old Men"
+                    className="w-full max-w-md px-3 py-2 glass rounded-md text-foreground placeholder-foreground/60"
+                  />
+
+                  {searching && <div className="text-xs text-foreground/60 mt-2">Searching...</div>}
+
+                  {searchResults.length > 0 && (
+                    <div className="mt-3 overflow-x-auto">
+                      <div className="flex gap-3 py-2">
+                        {searchResults.map((m: any) => {
+                          const title = m.title || m.name || 'Untitled'
+                          const thumb = m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : null
+                          return (
+                            <button
+                              key={m.id}
+                              onClick={() => selectSearchResult(m)}
+                              className="flex-shrink-0 w-36 glass rounded-md overflow-hidden text-left p-2 hover:scale-105 transform transition"
+                            >
+                              {thumb ? (
+                                <OptimizedImage src={thumb} alt={title} width={140} height={210} className="w-full h-40 object-cover rounded" />
+                              ) : (
+                                <div className="w-full h-40 bg-gray-800 flex items-center justify-center rounded">No Image</div>
+                              )}
+                              <div className="mt-2 text-sm font-medium line-clamp-2">{title}</div>
+                              {m.release_date && <div className="text-xs text-foreground/60">{m.release_date.split('-')[0]}</div>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "160px" }}>
+
                   <div className="flex flex-wrap gap-4" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                     {similarMovies.map((movie: any, idx: number) => {
                       const title = movie.title || movie.name || " "
